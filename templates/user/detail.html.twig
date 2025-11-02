@@ -1,0 +1,14 @@
+{% extends 'base.html.twig' %}
+
+{% block main_container %}
+    <h1>User Details</h1>
+    <p>Id: <span>{{ user.id }}</span></p>
+    <p>Email: <span>{{ user.email }}</span></p>
+    <p>Roles:
+        <ul>
+        {% for role in user.roles %}
+            <li>{{ role }}</li>
+        {% endfor %}
+        </ul>
+    </p>
+{% endblock %}

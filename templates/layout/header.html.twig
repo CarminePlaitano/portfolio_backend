@@ -1,0 +1,20 @@
+{% set currentUserId = app.user.id %}
+
+<header class="navbar bg-primary" style="z-index: 1046">
+    <div class="container-fluid justify-content-end">
+        <a class="navbar-brand col-md-3 col-lg-2 me-auto fs-6 text-white" href="{{ path('app_home') }}">CarminePlaitano BO</a>
+
+        <ul class="navbar-nav flex-row d-md-none">
+            <li class="nav-item text-nowrap">
+                <button class="nav-link px-3 text-white" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="{% trans from 'AppAdminAria' %}Toggle Animation{% endtrans %}">
+                    <i class="bi bi-list"></i>
+                </button>
+            </li>
+        </ul>
+        <ul class="navbar-nav flex-row align-items-center me-3">
+            <li class="nav-item">
+                <a href="{{ path('app_user_detail', {id: currentUserId}) }}" class="btn btn-secondary rounded rounded-circle py-2"><i class="bi bi-person"></i></a>
+            </li>
+        </ul>
+    </div>
+</header>
