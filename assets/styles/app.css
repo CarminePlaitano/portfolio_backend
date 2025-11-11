@@ -1,3 +1,7 @@
 body {
-    background-color: skyblue;
+    background-color: smokewhite;
+}
+
+.sidebar {
+    max-width: 220px;
 }
