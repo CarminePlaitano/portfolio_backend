@@ -21,6 +21,7 @@ class CreateAdminUserFixture extends Fixture
         $user->setPassword($hashedPassword);
 
         $manager->persist($user);
+
         $manager->flush();
     }
 }
