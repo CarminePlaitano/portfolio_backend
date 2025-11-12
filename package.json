@@ -1,0 +1,11 @@
+{
+  "name": "portfolio_backend",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test:unit": "vitest"
+  },
+  "devDependencies": {
+    "vitest": "^1.0.0"
+  }
+}
