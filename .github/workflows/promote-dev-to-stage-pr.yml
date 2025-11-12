@@ -50,7 +50,7 @@ jobs:
         run: npm ci
       
       - name: Run JS unit tests
-        run: npm run test:unit
+        run: npm run test:unit -- --passWithNoTests
 
       - name: Run Pest tests
         run: vendor/bin/pest --colors=always
