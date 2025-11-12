@@ -49,8 +49,8 @@ jobs:
       - name: Install frontend deps
         run: npm ci
       
-      - name: Build assets
-        run: npm run build
+      - name: Run JS unit tests
+        run: npm run test:unit
 
       - name: Run Pest tests
         run: vendor/bin/pest --colors=always
