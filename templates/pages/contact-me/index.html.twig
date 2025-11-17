@@ -8,6 +8,12 @@
     
     <div data-controller="contact-me">
         <p>This is the contact me page content.</p>
+
+        <ul>
+            {% for contact in contacts %}
+                <li>{{ contact }}</li>
+            {% endfor %}
+        </ul>
     </div>
 
 {% endblock %}
