@@ -9,18 +9,6 @@
                 "enabled": false,
                 "fetch": "eager"
             }
-        },
-        "sidebar": {
-            "enabled": true,
-            "fetch": "eager"
-        },
-        "tinymce": {
-            "enabled": true,
-            "fetch": "eager"
-        },
-        "contact-me": {
-            "enabled": true,
-            "fetch": "eager"
         }
     },
     "entrypoints": []
