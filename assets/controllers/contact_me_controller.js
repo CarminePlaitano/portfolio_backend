@@ -2,7 +2,7 @@ import { Controller } from "@hotwired/stimulus";
 import { escapeHtml, debounce, renderTablePagination } from "./utils.js";
 
 export default class extends Controller {
-    static targets = ["search", "type", "contactBy", "tbody", "pagination"];
+    static targets = ["search", "contactBy", "tbody", "pagination"];
     static values = { url: String }
 
     connect() {
@@ -15,7 +15,7 @@ export default class extends Controller {
     async fetch(opts = {}) {
         const params = new URLSearchParams();
 
-        if (this.hasSearchTarget) params.set('q', this.searchTarget.value || '');
+        if (this.hasSearchTarget) params.set('search', this.searchTarget.value || '');
         if (this.hasContactByTarget) params.set('contact_by', this.contactByTarget.value || '');
         if (opts.page) params.set('page', opts.page);
 
@@ -38,7 +38,7 @@ export default class extends Controller {
             const newUrl = new URL(window.location.pathname, window.location.origin);
 
             json.page && newUrl.searchParams.set('page', json.page);
-            this.searchTarget && newUrl.searchParams.set('q', this.searchTarget.value || '');
+            this.searchTarget && newUrl.searchParams.set('search', this.searchTarget.value || '');
             this.contactByTarget && newUrl.searchParams.set('contact_by', this.contactByTarget.value || '');
 
             window.history.replaceState({}, '', newUrl.toString());

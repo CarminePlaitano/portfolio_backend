@@ -20,12 +20,13 @@ class ContactTableService
     {
         $queryBuilder = $this->entityRepository->createQueryBuilder('c');
 
-        $search = $filters['q'] ?? $filters['search'] ?? null;
+        $search = $filters['search'] ?? null;
 
         if (!empty($search)) {
             $queryBuilder->andWhere(
                 $queryBuilder->expr()->orX(
-                    $queryBuilder->expr()->like('c.value', ':search'),
+                    $queryBuilder->expr()->like('c.type', ':search'),
+                    $queryBuilder->expr()->like('c.label', ':search'),
                     $queryBuilder->expr()->like('c.label', ':search')
                 )
             )->setParameter('search', '%'.$search.'%');
