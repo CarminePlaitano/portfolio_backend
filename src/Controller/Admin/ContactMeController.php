@@ -2,24 +2,81 @@
 
 namespace App\Controller\Admin;
 
-use App\Repository\ContactRepository;
+use App\Service\ContactTableService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
+#[IsGranted('ROLE_ADMIN')]
 class ContactMeController extends AbstractController
 {
-    #[IsGranted('ROLE_ADMIN')]
-    #[Route('/contact-me', name: 'app_contact_me', methods: ['GET'])]
-    public function index(ContactRepository $contactRepository): Response
-    {
-        $contacts = $contactRepository->findAll();
+    public function __construct(
+        private readonly ContactTableService $contactTableService,
+    ) {
+    }
 
-        dump($contacts);
+    #[Route('/contact-me', name: 'app_contact_me_index', methods: ['GET'])]
+    public function index(Request $request): Response
+    {
+        $page = max(1, (int) $request->query->get('page', 1));
+        // allow initial page to read perPage if present
+        $itemsPerPage = (int) $request->query->get('perPage', 15);
+
+        $filters = [
+            'type' => $request->query->get('type'),
+            'contact_by' => $request->query->get('contact_by'),
+            // use 'q' to match ContactTableService and Stimulus
+            'q' => $request->query->get('q'),
+        ];
+
+        $result = $this->contactTableService->list($filters, $page, $itemsPerPage);
 
         return $this->render('pages/contact-me/index.html.twig', [
-            'contacts' => $contacts
+            'contacts' => $result['data'],
+            'totalContacts' => $result['total'],
+            'currentPage' => $page,
+            'itemsPerPage' => $itemsPerPage,
+            'totalPages' => (int) ceil($result['total'] / $itemsPerPage),
+            'distinctTypes' => $this->contactTableService->getDistinctTypes(),
+            'distinctContactByValues' => $this->contactTableService->getDistinctContactBy(),
         ]);
     }
-} 
+
+    #[Route('/contact-me/list', name: 'app_contact_me_list', methods: ['GET'])]
+    public function list(Request $request): JsonResponse
+    {
+        $page = max(1, (int) $request->query->get('page', 1));
+        // read 'perPage' to match Stimulus
+        $perPage = (int) $request->query->get('perPage', 15);
+
+        $filters = [
+            'type' => $request->query->get('type'),
+            'contact_by' => $request->query->get('contact_by'),
+            // use 'q' as search key (Stimulus sends 'q')
+            'q' => $request->query->get('q'),
+        ];
+
+        $result = $this->contactTableService->list($filters, $page, $perPage);
+
+        $contactsAsArray = array_map(function ($contactEntity) {
+            return [
+                'id' => $contactEntity->getId(),
+                'type' => $contactEntity->getType(),
+                'value' => $contactEntity->getValue(),
+                'contactBy' => $contactEntity->getContactBy(),
+                'label' => $contactEntity->getLabel(),
+            ];
+        }, $result['data']);
+
+        // Return keys expected by your Stimulus controller: data, page, perPage, total
+        return $this->json([
+            'data' => $contactsAsArray,
+            'total' => $result['total'],
+            'page' => $page,
+            'perPage' => $perPage,
+        ]);
+    }
+}
