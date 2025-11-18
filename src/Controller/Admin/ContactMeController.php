@@ -22,14 +22,12 @@ class ContactMeController extends AbstractController
     public function index(Request $request): Response
     {
         $page = max(1, (int) $request->query->get('page', 1));
-        // allow initial page to read perPage if present
         $itemsPerPage = (int) $request->query->get('perPage', 15);
 
         $filters = [
             'type' => $request->query->get('type'),
             'contact_by' => $request->query->get('contact_by'),
-            // use 'q' to match ContactTableService and Stimulus
-            'q' => $request->query->get('q'),
+            'search' => $request->query->get('search'),
         ];
 
         $result = $this->contactTableService->list($filters, $page, $itemsPerPage);
@@ -40,7 +38,6 @@ class ContactMeController extends AbstractController
             'currentPage' => $page,
             'itemsPerPage' => $itemsPerPage,
             'totalPages' => (int) ceil($result['total'] / $itemsPerPage),
-            'distinctTypes' => $this->contactTableService->getDistinctTypes(),
             'distinctContactByValues' => $this->contactTableService->getDistinctContactBy(),
         ]);
     }
