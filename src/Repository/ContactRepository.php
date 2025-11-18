@@ -17,7 +17,7 @@ class ContactRepository extends ServiceEntityRepository
     }
 
     //    /**
-    //     * @return ContactMe[] Returns an array of Contact objects
+    //     * @return Contact[] Returns an array of Contact objects
     //     */
     //    public function findByExampleField($value): array
     //    {

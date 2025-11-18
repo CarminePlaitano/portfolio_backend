@@ -6,7 +6,7 @@ use App\Entity\Contact;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
 
-class CreateContactDataFixture extends Fixture
+class ContactDataFixtures extends Fixture
 {
     public function load(ObjectManager $manager): void
     {
