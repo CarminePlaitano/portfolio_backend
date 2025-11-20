@@ -12,11 +12,6 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
@@ -38,6 +33,7 @@ jobs:
 
       - name: Install Composer dependencies
         run: composer install --no-interaction --no-progress --prefer-dist --optimize-autoloader
+        working-directory: backend/
 
       - name: Run Pest tests
         run: vendor/bin/pest --colors=always
@@ -46,6 +42,11 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
@@ -62,8 +63,8 @@ jobs:
             ${{ runner.os }}-composer-
 
       - name: Install Composer dependencies for production
-        run: |
-          composer install --no-interaction --no-progress --no-dev --prefer-dist --optimize-autoloader --no-scripts
+        run: composer install --no-interaction --no-progress --no-dev --prefer-dist --optimize-autoloader --no-scripts
+        working-directory: backend/
 
       - name: Upload production artifact
         uses: actions/upload-artifact@v4
