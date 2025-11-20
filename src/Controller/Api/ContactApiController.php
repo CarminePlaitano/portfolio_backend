@@ -22,10 +22,17 @@ class ContactApiController extends AbstractController
     {
         try {
             $contacts = $this->contactRepository->findAll();
+
+            if ($contacts->isEmpty()) {
+                throw new \Exception('No contacts found');
+            }
         } catch (\Exception $exception) {
             return $this->json([
                 'success' => false,
-                'message' => 'Failed to retrieve contact list',
+                'message' => 'Failed to retrieve contact list: '.$exception->getMessage(),
+                'data' => [
+                    'contacts' => [],
+                ],
             ]);
         }
 
