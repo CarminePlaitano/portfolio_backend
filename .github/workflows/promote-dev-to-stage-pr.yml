@@ -46,35 +46,57 @@ jobs:
   create-and-merge-pr:
     needs: test
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
     steps:
-      - name: Checkout repo
+      - name: Checkout (same commit)
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.sha }}
           fetch-depth: 0
 
-      - name: Create or update pull request
-        id: cpr
-        uses: peter-evans/create-pull-request@v5
+      - name: Create (or reuse) PR dev → stage and try to merge
+        uses: actions/github-script@v6
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "Automated: promote dev → stage (${{ github.sha }})"
-          title: "Automated: promote dev → stage (${{ github.sha }})"
-          body: "Automated PR created by CI to promote changes from dev to stage."
-          branch: dev
-          base: stage
-          delete-branch: false
-          labels: |
-            automated-pr
-            automerge
-          assignees: ${{ github.actor }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const head = "dev";
+            const base = "stage";
 
-      - name: Auto-merge pull request
-        if: steps.cpr.outputs.pull-request-number != ''
-        uses: pascalgn/automerge-action@v0.15.6
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          MERGE_METHOD: "squash"
-          PULL_REQUEST_NUMBER: ${{ steps.cpr.outputs.pull-request-number }}
+            // find open PRs from dev -> stage
+            const prs = await github.rest.pulls.list({
+              owner, repo,
+              head: `${owner}:${head}`,
+              base,
+              state: "open"
+            });
+
+            let pr;
+            
+            if (prs.data.length > 0) {
+              pr = prs.data[0];
+              core.info(`Using existing PR #${pr.number}`);
+            } else {
+              const newPr = await github.rest.pulls.create({
+                owner, repo,
+                head,
+                base,
+                title: `Automated: promote ${head} → ${base} (${process.env.GITHUB_SHA?.slice(0,7)})`,
+                body: "Automated PR created by CI to promote changes from dev to stage."
+              });
+              pr = newPr.data;
+              core.info(`Created PR #${pr.number}`);
+            }
+
+            // Attempt to merge (may fail if protections block it)
+            try {
+              const mergeResult = await github.rest.pulls.merge({
+                owner, repo,
+                pull_number: pr.number,
+                merge_method: "merge"
+              });
+              core.info("Merge result: " + JSON.stringify(mergeResult.data));
+            } catch (err) {
+              core.warning("Auto-merge failed or blocked (e.g., branch protection). PR left open.");
+              core.warning(err.message);
+            }
