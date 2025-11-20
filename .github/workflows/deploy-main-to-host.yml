@@ -85,6 +85,49 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: production-build
+
+      - name: Set up SSH agent
+        uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add known_hosts from secret
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Dry-run rsync (preview)
+        env:
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          REMOTE_DIR: ${{ secrets.REMOTE_DIR }}
+        run: |
+          PORT="${SSH_PORT:-22}"
+          echo "Running rsync dry-run to ${SSH_USER}@${SSH_HOST}:${REMOTE_DIR} (port $PORT)"
+          RSYNC_RSH="ssh -p ${PORT} -o StrictHostKeyChecking=yes"
+          rsync -avz --delete --dry-run \
+          --exclude='logs' \
+          -e "$RSYNC_RSH" \
+          dist/ "${SSH_USER}@${SSH_HOST}:${REMOTE_DIR}"
+
+      - name: Deploy with rsync
+        env:
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          REMOTE_DIR: ${{ secrets.REMOTE_DIR }}
+        run: |
+          set -e
+          PORT="${SSH_PORT:-22}"
+          echo "Deploying build/ to ${SSH_USER}@${SSH_HOST}:${REMOTE_DIR} (port $PORT)"
+          RSYNC_RSH="ssh -p ${PORT} -o StrictHostKeyChecking=yes"
+          rsync -avz --delete \
+          --exclude='logs' \
+          -e "$RSYNC_RSH" \
+          public/ "${SSH_USER}@${SSH_HOST}:${REMOTE_DIR}"
+
       
       - name: Deploy to host
         uses: easingthemes/ssh-deploy@v5.0.0
@@ -94,4 +137,4 @@ jobs:
           REMOTE_USER: ${{ secrets.SSH_USER }}
           REMOTE_PORT: ${{ secrets.SSH_PORT }}
           TARGET: ${{ secrets.REMOTE_DIR }}
-          EXCLUDE: "/.git*, /.github/, /dist/"
+          EXCLUDE: "/.git*, /.github/, /public/"
