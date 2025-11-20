@@ -110,7 +110,7 @@ jobs:
           rsync -avz --delete --dry-run \
           --exclude='logs' \
           -e "$RSYNC_RSH" \
-          dist/ "${SSH_USER}@${SSH_HOST}:${REMOTE_DIR}"
+          public/ "${SSH_USER}@${SSH_HOST}:${REMOTE_DIR}"
 
       - name: Deploy with rsync
         env:
