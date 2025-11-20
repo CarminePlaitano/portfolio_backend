@@ -1,0 +1,97 @@
+name: Deploy main → host (tests → build → rsync deploy)
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, intl, pdo, pdo_mysql, xml, opcache
+          ini-values: post_max_size=256M, memory_limit=2G
+          coverage: none
+
+      - name: Setup Composer cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
+      - name: Install system deps (optional)
+        run: sudo apt-get update && sudo apt-get install -y git unzip
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist --optimize-autoloader
+
+      - name: Run Pest tests
+        run: vendor/bin/pest --colors=always
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, intl, pdo, pdo_mysql, xml, opcache
+          coverage: none
+
+      - name: Setup Composer cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
+      - name: Install Composer dependencies for production
+        run: |
+          composer install --no-interaction --no-progress --no-dev --prefer-dist --optimize-autoloader --no-scripts
+
+      - name: Upload production artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-build
+          path: .
+          if-no-files-found: error
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download production artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: production-build
+      
+      - name: Deploy to host
+        uses: easingthemes/ssh-deploy@v5.0.0
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          REMOTE_HOST: ${{ secrets.SSH_HOST }}
+          REMOTE_USER: ${{ secrets.SSH_USER }}
+          REMOTE_PORT: ${{ secrets.SSH_PORT }}
+          TARGET: ${{ secrets.REMOTE_DIR }}
+          EXCLUDE: "/.git*, /.github/, /dist/"

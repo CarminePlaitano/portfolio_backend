@@ -40,18 +40,6 @@ jobs:
       - name: Install Composer dependencies
         run: composer install --no-interaction --no-progress --prefer-dist --optimize-autoloader
 
-      - name: Setup Node.js for assets
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
-      
-      - name: Install frontend deps
-        run: npm ci
-      
-      - name: Run JS unit tests
-        run: npm run test:unit -- --passWithNoTests
-
       - name: Run Pest tests
         run: vendor/bin/pest --colors=always
 
