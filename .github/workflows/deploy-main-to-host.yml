@@ -74,7 +74,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: production-build
-          path: .
+          path: backend/public/
           if-no-files-found: error
 
   deploy:
@@ -127,14 +127,3 @@ jobs:
           --exclude='logs' \
           -e "$RSYNC_RSH" \
           public/ "${SSH_USER}@${SSH_HOST}:${REMOTE_DIR}"
-
-      
-      - name: Deploy to host
-        uses: easingthemes/ssh-deploy@v5.0.0
-        with:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          REMOTE_HOST: ${{ secrets.SSH_HOST }}
-          REMOTE_USER: ${{ secrets.SSH_USER }}
-          REMOTE_PORT: ${{ secrets.SSH_PORT }}
-          TARGET: ${{ secrets.REMOTE_DIR }}
-          EXCLUDE: "/.git*, /.github/, /public/"
