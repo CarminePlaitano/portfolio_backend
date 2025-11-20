@@ -46,11 +46,6 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
@@ -110,7 +105,7 @@ jobs:
           rsync -avz --delete --dry-run \
           --exclude='logs' \
           -e "$RSYNC_RSH" \
-          ./public/ "${SSH_USER}@${SSH_HOST}:${REMOTE_DIR}"
+          public/ "${SSH_USER}@${SSH_HOST}:${REMOTE_DIR}"
 
       - name: Deploy with rsync
         env:
@@ -126,4 +121,4 @@ jobs:
           rsync -avz --delete \
           --exclude='logs' \
           -e "$RSYNC_RSH" \
-          ./public/ "${SSH_USER}@${SSH_HOST}:${REMOTE_DIR}"
+          public/ "${SSH_USER}@${SSH_HOST}:${REMOTE_DIR}"
