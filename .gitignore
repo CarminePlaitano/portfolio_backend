@@ -1,6 +1,8 @@
 .idea
+/node_modules
 
-###> symfony/framework-bundle ###
+# symfony/framework-bundle
+.env.dev
 /.env.dev
 /.env.dev.local
 /.env.local.php
@@ -9,15 +11,16 @@
 /public/bundles/
 /var/
 /vendor/
-###< symfony/framework-bundle ###
 
-###> phpunit/phpunit ###
+# phpunit/phpunit
 /phpunit.xml
 /.phpunit.cache/
-###< phpunit/phpunit ###
 
-###> symfony/asset-mapper ###
+# symfony/asset-mapper
 /public/assets/
 /assets/vendor/
-###< symfony/asset-mapper ###
-.env.dev
+
+###> friendsofphp/php-cs-fixer ###
+/.php-cs-fixer.php
+/.php-cs-fixer.cache
+###< friendsofphp/php-cs-fixer ###

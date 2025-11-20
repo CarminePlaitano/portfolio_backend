@@ -1,0 +1,79 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Contacts{% endblock %}
+
+{% block main_container %}
+	{{ parent() }}
+
+	<div class="container py-4" data-controller="contact-me" data-contact-me-url-value="{{ path('app_contact_me_list') }}">
+		<div class="row mb-3 align-items-center">
+			<div class="col-md-4">
+				<input type="search" class="form-control" placeholder="Search by type, value or label..." data-contact-me-target="search" value="{{ app.request.get('search', '') }}" aria-label="Search"/>
+			</div>
+
+			<div class="col-md-3">
+				<select class="form-select" data-contact-me-target="contactBy">
+					<option value="">All contact by</option>
+					{% for contactBy in distinctContactByValues %}
+						<option value="{{ contactBy }}" {{ contactBy == app.request.get('contact_by') ? 'selected' : '' }}>{{ contactBy }}</option>
+					{% endfor %}
+				</select>
+			</div>
+
+			<div class="col-md-5 text-end">
+				<a href="{{ path('app_contact_me_new') }}" class="btn btn-success">
+					<i class="bi bi-plus-lg"></i>
+					New Contact
+				</a>
+			</div>
+		</div>
+
+
+		<div class="table-responsive">
+			<table class="table table-hover" id="contacts-table">
+				<thead class="table-light">
+					<tr>
+						<th>Type</th>
+						<th>Value</th>
+						<th>Contact by</th>
+						<th>Label</th>
+						<th class="text-end">Actions</th>
+					</tr>
+				</thead>
+				<tbody data-contact-me-target="tbody">
+					{% for contact in contacts %}
+						<tr>
+							<td>{{ contact.type }}</td>
+							<td>{{ contact.value }}</td>
+							<td>{{ contact.contactBy }}</td>
+							<td>{{ contact.label }}</td>
+							<td class="text-end">
+								<a href="{{ path('app_contact_me_edit', {id: contact.id}) }}" class="btn btn-sm btn-primary">Edit</a>
+
+								<form method="post" action="{{ path('app_contact_me_delete', {id: contact.id}) }}" onsubmit="return confirm('Are you sure?');" class="d-inline">
+									<input type="hidden" name="_token" value="{{ csrf_token('delete' ~ contact.id) }}">
+									<button class="btn btn-sm btn-danger">Delete</button>
+								</form>
+							</td>
+						</tr>
+					{% else %}
+						<tr>
+							<td colspan="5" class="text-center">No contacts found.</td>
+						</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		</div>
+
+		<nav aria-label="Contacts pagination">
+			<ul class="pagination justify-content-center" data-contact-me-target="pagination">
+				{% set current = page|default(1) %}
+				{% for p in 1..totalPages %}
+					<li class="page-item {{ p == current ? 'active' : '' }}">
+						<a class="page-link" href="{{ path('app_contact_me_index', app.request.query.all|merge({'page': p})) }}">{{ p }}</a>
+					</li>
+				{% endfor %}
+			</ul>
+		</nav>
+	</div>
+{% endblock %}
