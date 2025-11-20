@@ -1,11 +1,9 @@
-// assets/controllers/tinymce_controller.js
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
   static targets = ['textarea'];
 
   connect() {
-    // check global tinymce (loaded by your CDN <script> in head)
     if (typeof window.tinymce === 'undefined') {
       console.error('TinyMCE not found on window. Ensure CDN <script> is included before your app module.');
       return;
