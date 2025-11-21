@@ -144,8 +144,12 @@ jobs:
             TEMP_DIR=\"${TEMP_DIR}\"
             REMOTE_DIR=\"${REMOTE_DIR}\"
 
-            # Backup critical file
-            cp \"\$REMOTE_DIR/.env.prod.local\" \"\$TEMP_DIR/.env.prod.local\" || true
+            # Backup critical file only if it exists
+            if [ -f \"\$REMOTE_DIR/.env.prod.local\" ]; then
+              cp \"\$REMOTE_DIR/.env.prod.local\" \"\$TEMP_DIR/.env.prod.local\"
+            else
+              echo \"No existing .env.prod.local found, skipping copy\"
+            fi
 
             # Sync code over old, preserving var/
             rsync -a --exclude=\"var/\" \"\$TEMP_DIR/\" \"\$REMOTE_DIR/\"
