@@ -108,6 +108,7 @@ jobs:
           echo "Running rsync dry-run to ${SSH_USER}@${SSH_HOST}:${REMOTE_DIR} (port $PORT)"
           RSYNC_RSH="ssh -p ${PORT} -o StrictHostKeyChecking=yes"
           rsync -avz --delete --dry-run \
+          --exclude='var' \
           --exclude='.htaccess' \
           --exclude='.env.prod.local' \
           -e "$RSYNC_RSH" \
@@ -125,6 +126,7 @@ jobs:
           echo "Deploying build/ to ${SSH_USER}@${SSH_HOST}:${REMOTE_DIR} (port $PORT)"
           RSYNC_RSH="ssh -p ${PORT} -o StrictHostKeyChecking=yes"
           rsync -avz --delete \
+            --exclude='var' \
             --exclude='.htaccess' \
             --exclude='.env.prod.local' \
             -e "$RSYNC_RSH" \
