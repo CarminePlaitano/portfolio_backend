@@ -131,5 +131,7 @@ jobs:
             . "${SSH_USER}@${SSH_HOST}:${REMOTE_DIR}"
           
           echo "Warming cache on remote server..."
-          ssh -p "${PORT}" -o StrictHostKeyChecking=yes "${SSH_USER}@${SSH_HOST}:${REMOTE_DIR}" \
-            "php bin/console cache:clear --env=prod --no-interaction && php bin/console cache:warmup --env=prod --no-interaction"
+          ssh -p "${PORT}" -o StrictHostKeyChecking=yes \
+            "${SSH_USER}@${SSH_HOST}" \
+            "cd ${REMOTE_DIR} && php bin/console cache:clear --env=prod --no-interaction && \
+            php bin/console cache:warmup --env=prod --no-interaction"
