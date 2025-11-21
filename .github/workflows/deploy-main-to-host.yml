@@ -33,7 +33,6 @@ jobs:
 
       - name: Install Composer dependencies
         run: composer install --no-interaction --no-progress --prefer-dist --optimize-autoloader
-        working-directory: backend/
 
       - name: Run Pest tests
         run: vendor/bin/pest --colors=always
@@ -70,7 +69,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: production-build
-          path: public/
+          path: .
           if-no-files-found: error
 
   deploy:
