@@ -67,7 +67,10 @@ jobs:
             ${{ runner.os }}-composer-
 
       - name: Install Composer dependencies for production
-        run: composer install --no-interaction --no-progress --no-dev --prefer-dist --optimize-autoloader --no-scripts
+        run: |
+          composer install --no-interaction --no-progress --no-dev --prefer-dist --optimize-autoloader --no-scripts && \
+          php bin/console cache:clear --env=prod --no-interaction && \
+          php bin/console cache:warmup --env=prod --no-interaction
 
       - name: Upload production artifact
         uses: actions/upload-artifact@v4
@@ -128,17 +131,3 @@ jobs:
           --exclude='.env.prod.local' \
           -e "$RSYNC_RSH" \
           . "${SSH_USER}@${SSH_HOST}:${REMOTE_DIR}"
-
-      - name: Remote cache clean & warm-up
-        env:
-          SSH_USER: ${{ secrets.SSH_USER }}
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_PORT: ${{ secrets.SSH_PORT }}
-          REMOTE_DIR: ${{ secrets.REMOTE_DIR }}
-        run: |
-          set -e
-          PORT="${SSH_PORT:-22}"
-          echo "Running remote cache clean & warm-up on ${SSH_USER}@${SSH_HOST} (port $PORT)"
-
-          ssh -p "${PORT}" -o StrictHostKeyChecking=yes "${SSH_USER}@${SSH_HOST}" \
-            "cd ${REMOTE_DIR} && php bin/console cache:clear --env=prod --no-interaction && php bin/console cache:warmup --env=prod --no-interaction"
