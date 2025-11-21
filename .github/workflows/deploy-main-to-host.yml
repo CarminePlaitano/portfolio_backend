@@ -183,16 +183,19 @@ jobs:
         run: |
           PORT="${SSH_PORT:-22}"
           echo "Checking remote PHP CLI environment on ${SSH_USER}@${SSH_HOST}:${PORT}"
-          ssh -p ${PORT} ${SSH_USER}@${SSH_HOST} "bash -lc ' \
-            PHP_BIN=\$(command -v php8.4-cli || command -v php8.3-cli || command -v php8.2-cli || command -v php); \
-            echo \"Using PHP binary: \$PHP_BIN\"; \
-            # Use the found CLI binary (if any) to print what PHP actually sees for APP_ENV/APP_DEBUG
-            if [ -n \"\$PHP_BIN\" ]; then \
-              \$PHP_BIN -r \"echo 'REMOTE PHP CLI sees: APP_ENV=' . getenv('APP_ENV') . ' APP_DEBUG=' . getenv('APP_DEBUG') . PHP_EOL;\"; \
-            else \
-              echo 'No php binary found on remote!'; \
-              exit 2; \
-            fi' 
+          ssh -p "${PORT}" "${SSH_USER}@${SSH_HOST}" <<'REMOTE_EOF'
+          # detect a true CLI binary on the remote host
+          PHP_BIN=$(command -v php8.4-cli || command -v php8.3-cli || command -v php8.2-cli || command -v php)
+          echo "Using PHP binary: $PHP_BIN"
+
+          if [ -n "$PHP_BIN" ]; then
+            # run the CLI binary to print getenv() values (executed on remote)
+            "$PHP_BIN" -r 'echo "REMOTE PHP CLI sees: APP_ENV=" . getenv("APP_ENV") . " APP_DEBUG=" . getenv("APP_DEBUG") . PHP_EOL;'
+          else
+            echo "No php CLI binary found on remote"
+            exit 2
+          fi
+          REMOTE_EOF
 
       - name: Symfony warmup on remote
         env:
