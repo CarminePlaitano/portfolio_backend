@@ -140,24 +140,25 @@ jobs:
           PORT="${SSH_PORT:-22}"
           echo "Running remote cache clean & warmup on ${SSH_USER}@${SSH_HOST} (port $PORT)"
 
-          ssh -p "${PORT}" -o StrictHostKeyChecking=yes "${SSH_USER}@${SSH_HOST}" "bash -s" <<SSH_EOF
+          ssh -p "${PORT}" -o StrictHostKeyChecking=yes "${SSH_USER}@${SSH_HOST}" "REMOTE_DIR='${REMOTE_DIR}'; bash -s" <<'SSH_EOF'
           set -euo pipefail
 
           # application directory
-          APP_DIR="${REMOTE_DIR}/backend"
-          if [ ! -d "$APP_DIR" ]; then
-            echo "ERROR: application directory not found: $APP_DIR" >&2
+          APP_DIR="\$REMOTE_DIR/backend"
+          if [ ! -d "\$APP_DIR" ]; then
+            echo "ERROR: application directory not found: \$APP_DIR" >&2
             exit 1
           fi
           cd "\$APP_DIR"
 
-          # cache clean & warmup
+          # cache clear & warmup
           if [ -f bin/console ]; then
             php bin/console cache:clear --env=prod
             php bin/console cache:warmup --env=prod
           else
-            echo "ERROR: bin/console not found in $APP_DIR" >&2
+            echo "ERROR: bin/console not found in \$APP_DIR" >&2
             exit 1
           fi
 
           echo "Remote cache clean & warmup finished"
+          SSH_EOF
