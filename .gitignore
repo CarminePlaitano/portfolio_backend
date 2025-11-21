@@ -2,11 +2,8 @@
 /node_modules
 
 # symfony/framework-bundle
-.env.dev
-/.env.dev
-/.env.dev.local
-/.env.local.php
-/.env.*.local
+.env.local
+.env.*.local
 /config/secrets/prod/prod.decrypt.private.php
 /public/bundles/
 /var/
