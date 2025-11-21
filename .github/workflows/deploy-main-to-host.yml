@@ -139,7 +139,7 @@ jobs:
             . "${SSH_USER}@${SSH_HOST}:${TEMP_DIR}"
           
           echo "Moving files on server, preserving .env.prod.local and var/"
-          ssh -p ${PORT} ${SSH_USER}@${SSH_HOST} << 'ENDSSH'
+          ssh -p ${PORT} ${SSH_USER}@${SSH_HOST} << ENDSSH
             set -e
             REMOTE_DIR="${REMOTE_DIR}"
             TEMP_DIR="${REMOTE_DIR}_tmp"
