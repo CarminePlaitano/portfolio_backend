@@ -167,7 +167,7 @@ jobs:
           PORT="${SSH_PORT:-22}"
           ssh -p ${PORT} ${SSH_USER}@${SSH_HOST} "bash -c '
             set -e
-            CONSOLE_PATH=\"${REMOTE_DIR}/backend/bin/console\"
+            CONSOLE_PATH=\"${REMOTE_DIR}/bin/console\"
             PHP_BIN=\$(command -v php8.4-cli || command -v php8.3-cli || command -v php8.2-cli || command -v php8.4 || command -v php || true)
 
             if [ -z \"\$PHP_BIN\" ]; then
@@ -178,8 +178,8 @@ jobs:
             echo \"Using PHP binary: \$PHP_BIN\"
             echo \"Console path: \$CONSOLE_PATH\"
 
-            mkdir -p \"${REMOTE_DIR}/backend/var/cache\" \"${REMOTE_DIR}/backend/var/log\" || true
-            chmod -R 2775 \"${REMOTE_DIR}/backend/var\" || true
+            mkdir -p \"${REMOTE_DIR}/var/cache\" \"${REMOTE_DIR}/var/log\" || true
+            chmod -R 2775 \"${REMOTE_DIR}/var\" || true
 
             \$PHP_BIN \"\$CONSOLE_PATH\" dotenv:dump-prod
             \$PHP_BIN \"\$CONSOLE_PATH\" cache:clear --env=prod --no-interaction
