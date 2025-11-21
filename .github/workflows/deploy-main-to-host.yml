@@ -127,18 +127,5 @@ jobs:
           --exclude='.htaccess' \
           --exclude='.env.prod.local' \
           -e "$RSYNC_RSH" \
-          . "${SSH_USER}@${SSH_HOST}:${REMOTE_DIR}"
-
-      - name: Remote cache clean & warmup (prod)
-        env:
-          SSH_USER: ${{ secrets.SSH_USER }}
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_PORT: ${{ secrets.SSH_PORT }}
-          REMOTE_DIR: ${{ secrets.REMOTE_DIR }}
-        run: |
-          set -e
-          PORT="${SSH_PORT:-22}"
-          echo "Running remote cache clean & warmup on ${SSH_USER}@${SSH_HOST} (port $PORT)"
-
-          ssh -T -p "${PORT}" -o StrictHostKeyChecking=yes -o LogLevel=ERROR "${SSH_USER}@${SSH_HOST}" \
-            "cd ${REMOTE_DIR} && php bin/console cache:clear --env=prod --no-interaction && php bin/console cache:warmup --env=prod --no-interaction"
+          . "${SSH_USER}@${SSH_HOST}:${REMOTE_DIR} \
+          . "cd ${REMOTE_DIR} && php bin/console cache:clear --env=prod --no-interaction && php bin/console cache:warmup --env=prod --no-interaction"
