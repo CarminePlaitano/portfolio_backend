@@ -139,24 +139,16 @@ jobs:
             . "${SSH_USER}@${SSH_HOST}:${TEMP_DIR}"
           
           echo "Moving files on server, preserving .env.prod.local and var/"
-          ssh -p ${PORT} ${SSH_USER}@${SSH_HOST} << ENDSSH
-            set -e
-            REMOTE_DIR="${REMOTE_DIR}"
-            TEMP_DIR="${REMOTE_DIR}_tmp"
+          ssh -p ${PORT} ${SSH_USER}@${SSH_HOST} "bash -s" << EOF
+          REMOTE_DIR="${REMOTE_DIR}"
+          TEMP_DIR="${TEMP_DIR}"
 
-            # Backup critical files from production to temp
-            cp ${REMOTE_DIR}/.env.prod.local ${TEMP_DIR}/.env.prod.local || true
+          mkdir -p "\$TEMP_DIR"
+          cp "\$REMOTE_DIR/.env.prod.local" "\$TEMP_DIR/.env.prod.local" || true
+          rsync -a --exclude='var/' "\$TEMP_DIR/" "\$REMOTE_DIR/"
+          rm -rf "\$TEMP_DIR"
 
-            # Sync new code over old, preserving var/
-            rsync -a --exclude='var/' ${TEMP_DIR}/ ${REMOTE_DIR}/
-
-            # Cleanup temp
-            rm -rf ${TEMP_DIR}
-
-            # Generate .env.local from .env.prod.local
-            php ${REMOTE_DIR}/bin/console dotenv:dump-prod
-
-            # Clear and warmup cache in prod
-            php ${REMOTE_DIR}/bin/console cache:clear --env=prod --no-interaction
-            php ${REMOTE_DIR}/bin/console cache:warmup --env=prod --no-interaction
-          ENDSSH
+          php "\$REMOTE_DIR/bin/console" dotenv:dump-prod
+          php "\$REMOTE_DIR/bin/console" cache:clear --env=prod --no-interaction
+          php "\$REMOTE_DIR/bin/console" cache:warmup --env=prod --no-interaction
+          EOF
