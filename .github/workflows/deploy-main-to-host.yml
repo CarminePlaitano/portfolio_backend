@@ -124,11 +124,32 @@ jobs:
         run: |
           set -e
           PORT="${SSH_PORT:-22}"
-          echo "Deploying build/ to ${SSH_USER}@${SSH_HOST}:${REMOTE_DIR} (port $PORT)"
+          TEMP_DIR="${REMOTE_DIR}_tmp"
+          
+          echo "Creating temp directory on server"
+          ssh -p ${PORT} ${SSH_USER}@${SSH_HOST} "mkdir -p ${TEMP_DIR}"
+          
+          echo "Deploying to temp directory"
           RSYNC_RSH="ssh -p ${PORT} -o StrictHostKeyChecking=yes"
           rsync -avz --delete \
-            --exclude='var' \
+            --exclude='var/' \
             --exclude='.htaccess' \
             --exclude='.env.prod.local' \
             -e "$RSYNC_RSH" \
-            . "${SSH_USER}@${SSH_HOST}:${REMOTE_DIR}"
+            . "${SSH_USER}@${SSH_HOST}:${TEMP_DIR}"
+          
+          echo "Moving files on server, preserving .env and var/"
+          ssh -p ${PORT} ${SSH_USER}@${SSH_HOST} << 'ENDSSH'
+            set -e
+            REMOTE_DIR="${REMOTE_DIR}"
+            TEMP_DIR="${REMOTE_DIR}_tmp"
+            
+            # Backup critical files from production to temp
+            cp ${REMOTE_DIR}/.env.prod.local ${TEMP_DIR}/.env.prod.local || true
+            
+            # Sync new code over old, preserving var/
+            rsync -a --exclude='var/' ${TEMP_DIR}/ ${REMOTE_DIR}/
+            
+            # Cleanup
+            rm -rf ${TEMP_DIR}
+          ENDSSH
