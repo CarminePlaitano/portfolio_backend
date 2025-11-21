@@ -144,7 +144,7 @@ jobs:
           set -euo pipefail
 
           # application directory
-          APP_DIR="\$REMOTE_DIR/backend"
+          $APP_DIR="\$REMOTE_DIR/backend"
           if [ ! -d "\$APP_DIR" ]; then
             echo "ERROR: application directory not found: \$APP_DIR" >&2
             exit 1
