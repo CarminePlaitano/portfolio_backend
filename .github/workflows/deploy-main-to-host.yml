@@ -107,7 +107,7 @@ jobs:
           echo "Running rsync dry-run to ${SSH_USER}@${SSH_HOST}:${REMOTE_DIR} (port $PORT)"
           RSYNC_RSH="ssh -p ${PORT} -o StrictHostKeyChecking=yes"
           rsync -avz --delete --dry-run \
-          --exclude='public/.htaccess' \
+          --exclude='.htaccess' \
           --exclude='.env.prod.local' \
           -e "$RSYNC_RSH" \
           . "${SSH_USER}@${SSH_HOST}:${REMOTE_DIR}"
@@ -124,7 +124,40 @@ jobs:
           echo "Deploying build/ to ${SSH_USER}@${SSH_HOST}:${REMOTE_DIR} (port $PORT)"
           RSYNC_RSH="ssh -p ${PORT} -o StrictHostKeyChecking=yes"
           rsync -avz --delete \
-          --exclude='public/.htaccess' \
+          --exclude='.htaccess' \
           --exclude='.env.prod.local' \
           -e "$RSYNC_RSH" \
           . "${SSH_USER}@${SSH_HOST}:${REMOTE_DIR}"
+
+      - name: Remote cache clean & warmup (prod)
+        env:
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          REMOTE_DIR: ${{ secrets.REMOTE_DIR }}
+        run: |
+          set -e
+          PORT="${SSH_PORT:-22}"
+          echo "Running remote cache clean & warmup on ${SSH_USER}@${SSH_HOST} (port $PORT)"
+
+          ssh -p "${PORT}" -o StrictHostKeyChecking=yes "${SSH_USER}@${SSH_HOST}" "REMOTE_DIR='${REMOTE_DIR}'; bash -s" <<'SSH_EOF'
+          set -euo pipefail
+
+          # application directory
+          APP_DIR="${REMOTE_DIR}/backend"
+          if [ ! -d "$APP_DIR" ]; then
+            echo "ERROR: application directory not found: $APP_DIR" >&2
+            exit 1
+          fi
+          cd "$APP_DIR"
+
+          # cache clean & warmup
+          if [ -f bin/console ]; then
+            php bin/console cache:clear --env=prod
+            php bin/console cache:warmup --env=prod
+          else
+            echo "ERROR: bin/console not found in $APP_DIR" >&2
+            exit 1
+          fi
+
+          echo "Remote cache clean & warmup finished"
