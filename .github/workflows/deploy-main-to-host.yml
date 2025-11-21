@@ -109,13 +109,13 @@ jobs:
           echo "Running rsync dry-run to ${SSH_USER}@${SSH_HOST}:${REMOTE_DIR} (port $PORT)"
           RSYNC_RSH="ssh -p ${PORT} -o StrictHostKeyChecking=yes"
           rsync -avz --delete --dry-run \
-          --exclude='var' \
-          --exclude='.htaccess' \
-          --exclude='.env.prod.local' \
-          -e "$RSYNC_RSH" \
-          . "${SSH_USER}@${SSH_HOST}:${REMOTE_DIR}"
+            --exclude='var' \
+            --exclude='.htaccess' \
+            --exclude='.env.prod.local' \
+            -e "$RSYNC_RSH" \
+            . "${SSH_USER}@${SSH_HOST}:${REMOTE_DIR}"
 
-      - name: Deploy with rsync
+      - name: Deploy with rsync and warmup Symfony
         env:
           SSH_USER: ${{ secrets.SSH_USER }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
@@ -138,18 +138,25 @@ jobs:
             -e "$RSYNC_RSH" \
             . "${SSH_USER}@${SSH_HOST}:${TEMP_DIR}"
           
-          echo "Moving files on server, preserving .env and var/"
-          ssh -p ${PORT} ${SSH_USER}@${SSH_HOST} << ENDSSH
+          echo "Moving files on server, preserving .env.prod.local and var/"
+          ssh -p ${PORT} ${SSH_USER}@${SSH_HOST} << 'ENDSSH'
             set -e
             REMOTE_DIR="${REMOTE_DIR}"
             TEMP_DIR="${REMOTE_DIR}_tmp"
-            
+
             # Backup critical files from production to temp
             cp ${REMOTE_DIR}/.env.prod.local ${TEMP_DIR}/.env.prod.local || true
-            
+
             # Sync new code over old, preserving var/
             rsync -a --exclude='var/' ${TEMP_DIR}/ ${REMOTE_DIR}/
-            
-            # Cleanup
+
+            # Cleanup temp
             rm -rf ${TEMP_DIR}
+
+            # Generate .env.local from .env.prod.local
+            php ${REMOTE_DIR}/bin/console dotenv:dump-prod
+
+            # Clear and warmup cache in prod
+            php ${REMOTE_DIR}/bin/console cache:clear --env=prod --no-interaction
+            php ${REMOTE_DIR}/bin/console cache:warmup --env=prod --no-interaction
           ENDSSH
