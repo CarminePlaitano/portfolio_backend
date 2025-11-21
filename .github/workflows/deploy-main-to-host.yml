@@ -128,4 +128,4 @@ jobs:
           --exclude='.env.prod.local' \
           -e "$RSYNC_RSH" \
           . "${SSH_USER}@${SSH_HOST}:${REMOTE_DIR} \
-          . "cd ${REMOTE_DIR} && php bin/console cache:clear --env=prod --no-interaction && php bin/console cache:warmup --env=prod --no-interaction"
+          . "php bin/console cache:clear --env=prod --no-interaction && php bin/console cache:warmup --env=prod --no-interaction"
