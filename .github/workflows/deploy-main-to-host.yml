@@ -69,7 +69,7 @@ jobs:
       - name: Install Composer dependencies for production
         run: |
           composer install --no-interaction --no-progress --no-dev --prefer-dist --optimize-autoloader --no-scripts && \
-          php8.4-cli bin/console cache:clear --env=prod --no-interaction
+          php bin/console cache:clear --env=prod --no-interaction
 
       - name: Debug - Verify .env exists before upload
         run: |
