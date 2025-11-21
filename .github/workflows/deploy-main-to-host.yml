@@ -143,16 +143,9 @@ jobs:
           ssh -p "${PORT}" -o StrictHostKeyChecking=yes "${SSH_USER}@${SSH_HOST}" "REMOTE_DIR='${REMOTE_DIR}'; bash -s" <<'SSH_EOF'
           set -euo pipefail
 
-          REMOTE_DIR="${REMOTE_DIR:-/home/${USER}}"
-          # application directory
-          APP_DIR="$REMOTE_DIR/backend"
-          if [ ! -d "\$APP_DIR" ]; then
-            echo "ERROR: application directory not found: \$APP_DIR" >&2
-            exit 1
-          fi
-          cd "\$APP_DIR"
-
           # cache clear & warmup
+          cd "\$REMOTE_DIR"
+
           if [ -f bin/console ]; then
             php bin/console cache:clear --env=prod
             php bin/console cache:warmup --env=prod
