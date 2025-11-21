@@ -175,6 +175,17 @@ jobs:
             rm -rf \"\$TEMP_DIR\"
           '"
 
+      - name: Debug - show remote PHP CLI env
+        env:
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          REMOTE_DIR: ${{ secrets.REMOTE_DIR }}
+        run: |
+          PORT="${SSH_PORT:-22}"
+          echo "Checking remote PHP CLI environment on ${SSH_USER}@${SSH_HOST}:${PORT}"
+          ssh -p ${PORT} ${SSH_USER}@${SSH_HOST} "bash -lc 'php -r \"echo \\\"REMOTE PHP CLI sees: APP_ENV=\\\".getenv(\\\"APP_ENV\\\").\\\" APP_DEBUG=\\\".getenv(\\\"APP_DEBUG\\\").\\\"\\n\\\";\"'"
+
       - name: Symfony warmup on remote
         env:
           SSH_USER: ${{ secrets.SSH_USER }}
