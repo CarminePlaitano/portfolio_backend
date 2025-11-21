@@ -104,6 +104,8 @@ jobs:
           RSYNC_RSH="ssh -p ${PORT} -o StrictHostKeyChecking=yes"
           rsync -avz --delete --dry-run \
           --exclude='logs' \
+          --exclude='public/.htaccess' \
+          --exclude='.env.prod.local' \
           -e "$RSYNC_RSH" \
           public/ "${SSH_USER}@${SSH_HOST}:${REMOTE_DIR}"
 
@@ -120,5 +122,7 @@ jobs:
           RSYNC_RSH="ssh -p ${PORT} -o StrictHostKeyChecking=yes"
           rsync -avz --delete \
           --exclude='logs' \
+          --exclude='public/.htaccess' \
+          --exclude='.env.prod.local' \
           -e "$RSYNC_RSH" \
           public/ "${SSH_USER}@${SSH_HOST}:${REMOTE_DIR}"
