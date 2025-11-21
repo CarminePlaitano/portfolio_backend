@@ -140,15 +140,15 @@ jobs:
           PORT="${SSH_PORT:-22}"
           echo "Running remote cache clean & warmup on ${SSH_USER}@${SSH_HOST} (port $PORT)"
 
-          ssh -p "${PORT}" -o StrictHostKeyChecking=yes "${SSH_USER}@${SSH_HOST}" <<SSH_EOF
+          ssh -p "${PORT}" -o StrictHostKeyChecking=yes "${SSH_USER}@${SSH_HOST}" bash -s <<SSH_EOF
           set -euo pipefail
 
           # cache clear & warmup
           cd "${REMOTE_DIR}"
 
           if [ -f bin/console ]; then
-            php bin/console cache:clear --env=prod
-            php bin/console cache:warmup --env=prod
+            php bin/console cache:clear --env=prod --no-interaction
+            php bin/console cache:warmup --env=prod --no-interaction
           else
             echo "ERROR: bin/console not found in ${REMOTE_DIR}" >&2
             exit 1
