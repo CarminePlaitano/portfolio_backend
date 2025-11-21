@@ -77,113 +77,113 @@ jobs:
           name: production-build
           path: .
           if-no-files-found: error
-deploy:
-  needs: build
-  runs-on: ubuntu-latest
-  steps:
-    - name: Download production artifact
-      uses: actions/download-artifact@v4
-      with:
-        name: production-build
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download production artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: production-build
 
-    - name: Set up SSH agent
-      uses: webfactory/ssh-agent@v0.8.0
-      with:
-        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Set up SSH agent
+        uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-    - name: Add known_hosts from secret
-      run: |
-        mkdir -p ~/.ssh
-        echo "${{ secrets.KNOWN_HOSTS }}" > ~/.ssh/known_hosts
-        chmod 644 ~/.ssh/known_hosts
+      - name: Add known_hosts from secret
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
 
-    - name: Dry-run rsync (preview)
-      env:
-        SSH_USER: ${{ secrets.SSH_USER }}
-        SSH_HOST: ${{ secrets.SSH_HOST }}
-        SSH_PORT: ${{ secrets.SSH_PORT }}
-        REMOTE_DIR: ${{ secrets.REMOTE_DIR }}
-      run: |
-        PORT="${SSH_PORT:-22}"
-        echo "Running rsync dry-run to ${SSH_USER}@${SSH_HOST}:${REMOTE_DIR} (port $PORT)"
-        RSYNC_RSH="ssh -p ${PORT} -o StrictHostKeyChecking=yes"
-        rsync -avz --delete --dry-run \
-          --exclude='var' \
-          --exclude='.htaccess' \
-          --exclude='.env.prod.local' \
-          -e "$RSYNC_RSH" \
-          . "${SSH_USER}@${SSH_HOST}:${REMOTE_DIR}"
+      - name: Dry-run rsync (preview)
+        env:
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          REMOTE_DIR: ${{ secrets.REMOTE_DIR }}
+        run: |
+          PORT="${SSH_PORT:-22}"
+          echo "Running rsync dry-run to ${SSH_USER}@${SSH_HOST}:${REMOTE_DIR} (port $PORT)"
+          RSYNC_RSH="ssh -p ${PORT} -o StrictHostKeyChecking=yes"
+          rsync -avz --delete --dry-run \
+            --exclude='var' \
+            --exclude='.htaccess' \
+            --exclude='.env.prod.local' \
+            -e "$RSYNC_RSH" \
+            . "${SSH_USER}@${SSH_HOST}:${REMOTE_DIR}"
 
-    - name: Deploy with rsync
-      env:
-        SSH_USER: ${{ secrets.SSH_USER }}
-        SSH_HOST: ${{ secrets.SSH_HOST }}
-        SSH_PORT: ${{ secrets.SSH_PORT }}
-        REMOTE_DIR: ${{ secrets.REMOTE_DIR }}
-      run: |
-        set -e
-        PORT="${SSH_PORT:-22}"
-        TEMP_DIR="${REMOTE_DIR}_tmp"
-
-        echo "Creating temp directory on server"
-        ssh -p ${PORT} ${SSH_USER}@${SSH_HOST} "mkdir -p ${TEMP_DIR}"
-
-        echo "Deploying to temp directory"
-        RSYNC_RSH="ssh -p ${PORT} -o StrictHostKeyChecking=yes"
-        rsync -avz --delete \
-          --exclude='var/' \
-          --exclude='.htaccess' \
-          --exclude='.env.prod.local' \
-          -e "$RSYNC_RSH" \
-          . "${SSH_USER}@${SSH_HOST}:${TEMP_DIR}"
-
-        echo "Moving files on server, preserving .env.prod.local and var/"
-        ssh -p ${PORT} ${SSH_USER}@${SSH_HOST} "bash -c '
+      - name: Deploy with rsync
+        env:
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          REMOTE_DIR: ${{ secrets.REMOTE_DIR }}
+        run: |
           set -e
-          TEMP_DIR=\"${TEMP_DIR}\"
-          REMOTE_DIR=\"${REMOTE_DIR}\"
+          PORT="${SSH_PORT:-22}"
+          TEMP_DIR="${REMOTE_DIR}_tmp"
 
-          # Backup critical file only if it exists
-          if [ -f \"\$REMOTE_DIR/.env.prod.local\" ]; then
-            cp \"\$REMOTE_DIR/.env.prod.local\" \"\$TEMP_DIR/.env.prod.local\"
-          else
-            echo \"No existing .env.prod.local found, skipping copy\"
-          fi
+          echo "Creating temp directory on server"
+          ssh -p ${PORT} ${SSH_USER}@${SSH_HOST} "mkdir -p ${TEMP_DIR}"
 
-          # Sync code over old, preserving var/
-          rsync -a --exclude=\"var/\" \"\$TEMP_DIR/\" \"\$REMOTE_DIR/\"
+          echo "Deploying to temp directory"
+          RSYNC_RSH="ssh -p ${PORT} -o StrictHostKeyChecking=yes"
+          rsync -avz --delete \
+            --exclude='var/' \
+            --exclude='.htaccess' \
+            --exclude='.env.prod.local' \
+            -e "$RSYNC_RSH" \
+            . "${SSH_USER}@${SSH_HOST}:${TEMP_DIR}"
 
-          # Cleanup temp
-          rm -rf \"\$TEMP_DIR\"
-        '"
+          echo "Moving files on server, preserving .env.prod.local and var/"
+          ssh -p ${PORT} ${SSH_USER}@${SSH_HOST} "bash -c '
+            set -e
+            TEMP_DIR=\"${TEMP_DIR}\"
+            REMOTE_DIR=\"${REMOTE_DIR}\"
 
-    - name: Symfony warmup on remote
-      env:
-        SSH_USER: ${{ secrets.SSH_USER }}
-        SSH_HOST: ${{ secrets.SSH_HOST }}
-        SSH_PORT: ${{ secrets.SSH_PORT }}
-        REMOTE_DIR: ${{ secrets.REMOTE_DIR }}
-      run: |
-        PORT="${SSH_PORT:-22}"
-        ssh -p ${PORT} ${SSH_USER}@${SSH_HOST} "bash -c '
-          set -e
-          CONSOLE_PATH=\"${REMOTE_DIR}/backend/bin/console\"
-          PHP_BIN=\$(command -v php8.4-cli || command -v php8.3-cli || command -v php8.2-cli || command -v php8.4 || command -v php || true)
+            # Backup critical file only if it exists
+            if [ -f \"\$REMOTE_DIR/.env.prod.local\" ]; then
+              cp \"\$REMOTE_DIR/.env.prod.local\" \"\$TEMP_DIR/.env.prod.local\"
+            else
+              echo \"No existing .env.prod.local found, skipping copy\"
+            fi
 
-          if [ -z \"\$PHP_BIN\" ]; then
-            echo \"No PHP CLI binary found on remote host. Aborting.\"
-            exit 1
-          fi
+            # Sync code over old, preserving var/
+            rsync -a --exclude=\"var/\" \"\$TEMP_DIR/\" \"\$REMOTE_DIR/\"
 
-          echo \"Using PHP binary: \$PHP_BIN\"
-          echo \"Console path: \$CONSOLE_PATH\"
+            # Cleanup temp
+            rm -rf \"\$TEMP_DIR\"
+          '"
 
-          mkdir -p \"${REMOTE_DIR}/backend/var/cache\" \"${REMOTE_DIR}/backend/var/log\" || true
-          chmod -R 2775 \"${REMOTE_DIR}/backend/var\" || true
+      - name: Symfony warmup on remote
+        env:
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          REMOTE_DIR: ${{ secrets.REMOTE_DIR }}
+        run: |
+          PORT="${SSH_PORT:-22}"
+          ssh -p ${PORT} ${SSH_USER}@${SSH_HOST} "bash -c '
+            set -e
+            CONSOLE_PATH=\"${REMOTE_DIR}/backend/bin/console\"
+            PHP_BIN=\$(command -v php8.4-cli || command -v php8.3-cli || command -v php8.2-cli || command -v php8.4 || command -v php || true)
 
-          \$PHP_BIN \"\$CONSOLE_PATH\" dotenv:dump-prod
-          \$PHP_BIN \"\$CONSOLE_PATH\" cache:clear --env=prod --no-interaction
-          \$PHP_BIN \"\$CONSOLE_PATH\" cache:warmup --env=prod --no-interaction
+            if [ -z \"\$PHP_BIN\" ]; then
+              echo \"No PHP CLI binary found on remote host. Aborting.\"
+              exit 1
+            fi
 
-          echo \"Symfony warmup finished.\"
-        '"
+            echo \"Using PHP binary: \$PHP_BIN\"
+            echo \"Console path: \$CONSOLE_PATH\"
+
+            mkdir -p \"${REMOTE_DIR}/backend/var/cache\" \"${REMOTE_DIR}/backend/var/log\" || true
+            chmod -R 2775 \"${REMOTE_DIR}/backend/var\" || true
+
+            \$PHP_BIN \"\$CONSOLE_PATH\" dotenv:dump-prod
+            \$PHP_BIN \"\$CONSOLE_PATH\" cache:clear --env=prod --no-interaction
+            \$PHP_BIN \"\$CONSOLE_PATH\" cache:warmup --env=prod --no-interaction
+
+            echo \"Symfony warmup finished.\"
+          '"
