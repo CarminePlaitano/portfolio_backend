@@ -71,12 +71,30 @@ jobs:
           composer install --no-interaction --no-progress --no-dev --prefer-dist --optimize-autoloader --no-scripts && \
           php bin/console cache:clear --env=prod --no-interaction
 
+      - name: Debug - Verify .env exists before upload
+        run: |
+          echo "=== Checking .env file ==="
+          if [ -f .env ]; then
+            echo "✓ .env file EXISTS"
+            echo "First 5 lines:"
+            head -n 5 .env
+          else
+            echo "✗ .env file MISSING - This will cause deployment to fail!"
+            exit 1
+          fi          
+
       - name: Upload production artifact
         uses: actions/upload-artifact@v4
         with:
           name: production-build
-          path: .
+          path: |
+            .
+            !.git
+            !.github
+            !tests
           if-no-files-found: error
+          include-hidden-files: true
+          
   deploy:
     needs: build
     runs-on: ubuntu-latest
