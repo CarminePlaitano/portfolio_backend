@@ -1,0 +1,185 @@
+name: Deploy stage → host (tests → build → rsync deploy)
+
+on:
+  workflow_run:
+    workflows: ["Promote dev → stage (tests → PR → auto-merge)"]
+    types:
+      - completed
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, intl, pdo, pdo_mysql, xml, opcache
+          ini-values: post_max_size=256M, memory_limit=2G
+          coverage: none
+
+      - name: Setup Composer cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
+      - name: Install system deps (optional)
+        run: sudo apt-get update && sudo apt-get install -y git unzip
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist --optimize-autoloader
+
+      - name: Run Pest tests
+        run: vendor/bin/pest --colors=always
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, intl, pdo, pdo_mysql, xml, opcache
+          coverage: none
+
+      - name: Setup Composer cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
+      - name: Install Composer dependencies for production
+        run: |
+          composer install --no-interaction --no-progress --no-dev --prefer-dist --optimize-autoloader --no-scripts
+
+      - name: Upload production artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-build
+          path: |
+            .
+            !.git
+            !.github
+            !tests/
+          if-no-files-found: error
+          include-hidden-files: true
+          
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download production artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: production-build
+
+      - name: Set up SSH agent
+        uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add known_hosts from secret
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Dry-run rsync (preview)
+        env:
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          STAGE_REMOTE_DIR: ${{ secrets.STAGE_REMOTE_DIR }}
+        run: |
+          PORT="${SSH_PORT:-22}"
+          RSYNC_RSH="ssh -p ${PORT} -o StrictHostKeyChecking=yes"
+
+          # Running rsync dry-run to ${SSH_USER}@${SSH_HOST}:${STAGE_REMOTE_DIR} (port $PORT)"
+          rsync -avz --delete --dry-run \
+            --exclude='var' \
+            --exclude='.htaccess' \
+            --exclude='.env.local' \
+            -e "$RSYNC_RSH" \
+            . "${SSH_USER}@${SSH_HOST}:${STAGE_REMOTE_DIR}"
+
+      - name: Deploy with rsync
+        env:
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          STAGE_REMOTE_DIR: ${{ secrets.STAGE_REMOTE_DIR }}
+        run: |
+          set -e
+
+          PORT="${SSH_PORT:-22}"
+          TEMP_DIR="${STAGE_REMOTE_DIR}_tmp"
+
+          # Creating temp directory on server
+          ssh -p ${PORT} ${SSH_USER}@${SSH_HOST} "mkdir -p ${TEMP_DIR}"
+
+          # Deploying to temp directory
+          RSYNC_RSH="ssh -p ${PORT} -o StrictHostKeyChecking=yes"
+          rsync -avz --delete \
+            --exclude='var/' \
+            --exclude='.htaccess' \
+            --exclude='.env.local' \
+            -e "$RSYNC_RSH" \
+            . "${SSH_USER}@${SSH_HOST}:${TEMP_DIR}"
+
+          # Moving files on server, preserving .env.local and var/
+          ssh -p ${PORT} ${SSH_USER}@${SSH_HOST} "bash -c '
+            set -e
+
+            TEMP_DIR=\"${TEMP_DIR}\"
+            STAGE_REMOTE_DIR=\"${STAGE_REMOTE_DIR}\"
+
+            # Backup critical file
+            cp \"\$STAGE_REMOTE_DIR/.env.local\" \"\$TEMP_DIR/.env.local\"
+
+            # Sync code over old, preserving var/
+            rsync -a --exclude=\"var/\" \"\$TEMP_DIR/\" \"\$STAGE_REMOTE_DIR/\"
+
+            # Cleanup temp
+            rm -rf \"\$TEMP_DIR\"
+          '"
+
+      - name: Symfony warmup on remote
+        env:
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          STAGE_REMOTE_DIR: ${{ secrets.STAGE_REMOTE_DIR }}
+        run: |
+          PORT="${SSH_PORT:-22}"
+          ssh -p ${PORT} ${SSH_USER}@${SSH_HOST} "bash -c '
+            set -e
+
+            # Use correct path to php console binary from IONOS host
+            CONSOLE_PATH=\"${STAGE_REMOTE_DIR}/bin/console\"
+            PHP_BIN=\$(command -v php8.4-cli || command -v php8.3-cli || command -v php8.2-cli || command -v php)
+
+            # Symfony cache commands
+            \$PHP_BIN \"\$CONSOLE_PATH\" cache:clear --env=prod --no-interaction
+            \$PHP_BIN \"\$CONSOLE_PATH\" cache:warmup --env=prod --no-interaction
+            \$PHP_BIN \"\$CONSOLE_PATH\" importmap:install --env=prod --no-interaction
+            \$PHP_BIN \"\$CONSOLE_PATH\" doctrine:migrations:migrate --env=prod --no-interaction
+          '"
