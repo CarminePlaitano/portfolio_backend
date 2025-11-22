@@ -1,9 +1,10 @@
 name: Deploy stage → host (tests → build → rsync deploy)
 
 on:
-  push:
-    branches:
-      - stage
+  workflow_run:
+    workflows: ["Promote dev → stage (tests → PR → auto-merge)"]
+    types:
+      - completed
 
 permissions:
   contents: write
