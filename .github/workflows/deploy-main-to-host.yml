@@ -226,3 +226,29 @@ jobs:
 
             echo \"Symfony warmup finished.\"
           '"
+      - name: Debug - Check deployed .env files
+        env:
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          REMOTE_DIR: ${{ secrets.REMOTE_DIR }}
+        run: |
+          PORT="${SSH_PORT:-22}"
+          ssh -p ${PORT} ${SSH_USER}@${SSH_HOST} "bash -c '
+            echo \"=== .env files on server ===\"
+            ls -la \"${REMOTE_DIR}\"/.env* 2>/dev/null || echo \"No .env files found\"
+            
+            echo \"\"
+            echo \"=== Content of .env (first 10 lines) ===\"
+            head -n 10 \"${REMOTE_DIR}/.env\" 2>/dev/null || echo \".env not found\"
+            
+            echo \"\"
+            echo \"=== .env.prod.local exists? ===\"
+            if [ -f \"${REMOTE_DIR}/.env.prod.local\" ]; then
+              echo \"YES - .env.prod.local exists\"
+              echo \"First line (without secrets):\"
+              head -n 1 \"${REMOTE_DIR}/.env.prod.local\"
+            else
+              echo \"NO - .env.prod.local MISSING!\"
+            fi
+          '"
