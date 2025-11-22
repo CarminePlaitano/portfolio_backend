@@ -221,7 +221,6 @@ jobs:
             fi
 
             # Symfony commands
-            \$PHP_BIN \"\$CONSOLE_PATH\" dotenv:dump-prod
             \$PHP_BIN \"\$CONSOLE_PATH\" cache:clear --env=prod --no-interaction
             \$PHP_BIN \"\$CONSOLE_PATH\" cache:warmup --env=prod --no-interaction
 
