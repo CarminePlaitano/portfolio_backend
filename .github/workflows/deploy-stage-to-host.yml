@@ -116,9 +116,11 @@ jobs:
           # Running rsync dry-run to ${SSH_USER}@${SSH_HOST}:${STAGE_REMOTE_DIR} (port $PORT)"
           rsync -avz --delete --dry-run \
             --exclude='var' \
-            --exclude='.htaccess' \
-            --exclude='.env' \
-            --exclude='.env.local' \
+            --exclude='public/.htaccess' \
+            --exclude='.env*' \
+            --exclude='.git/' \
+            --exclude='.github/' \
+            --exclude='tests/' \
             -e "$RSYNC_RSH" \
             . "${SSH_USER}@${SSH_HOST}:${STAGE_REMOTE_DIR}"
 
@@ -141,9 +143,11 @@ jobs:
           RSYNC_RSH="ssh -p ${PORT} -o StrictHostKeyChecking=yes"
           rsync -avz --delete \
             --exclude='var/' \
-            --exclude='.htaccess' \
-            --exclude='.env' \
-            --exclude='.env.local' \
+            --exclude='public/.htaccess' \
+            --exclude='.env*' \
+            --exclude='.git/' \
+            --exclude='.github/' \
+            --exclude='tests/' \
             -e "$RSYNC_RSH" \
             . "${SSH_USER}@${SSH_HOST}:${TEMP_DIR}"
 
@@ -184,5 +188,4 @@ jobs:
             \$PHP_BIN \"\$CONSOLE_PATH\" cache:clear --env=prod --no-interaction
             \$PHP_BIN \"\$CONSOLE_PATH\" cache:warmup --env=prod --no-interaction
             \$PHP_BIN \"\$CONSOLE_PATH\" importmap:install --env=prod --no-interaction
-            \$PHP_BIN \"\$CONSOLE_PATH\" doctrine:migrations:migrate --env=prod --no-interaction
           '"
