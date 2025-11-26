@@ -115,8 +115,8 @@ jobs:
           # Running rsync dry-run to ${SSH_USER}@${SSH_HOST}:${REMOTE_DIR} (port $PORT)"
           rsync -avz --delete --dry-run \
             --exclude='var' \
-            --exclude='.htaccess' \
-            --exclude='.env.local' \
+            --exclude='public/.htaccess' \
+            --exclude='.env*' \
             -e "$RSYNC_RSH" \
             . "${SSH_USER}@${SSH_HOST}:${REMOTE_DIR}"
 
@@ -138,9 +138,9 @@ jobs:
           # Deploying to temp directory
           RSYNC_RSH="ssh -p ${PORT} -o StrictHostKeyChecking=yes"
           rsync -avz --delete \
-            --exclude='var/' \
-            --exclude='.htaccess' \
-            --exclude='.env.local' \
+            --exclude='var' \
+            --exclude='public/.htaccess' \
+            --exclude='.env*' \
             -e "$RSYNC_RSH" \
             . "${SSH_USER}@${SSH_HOST}:${TEMP_DIR}"
 
