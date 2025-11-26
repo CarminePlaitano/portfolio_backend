@@ -1,5 +1,6 @@
 .idea
 /node_modules
+/public/.htaccess
 
 # symfony/framework-bundle
 .env.local

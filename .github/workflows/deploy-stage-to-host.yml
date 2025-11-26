@@ -116,8 +116,11 @@ jobs:
           # Running rsync dry-run to ${SSH_USER}@${SSH_HOST}:${STAGE_REMOTE_DIR} (port $PORT)"
           rsync -avz --delete --dry-run \
             --exclude='var' \
-            --exclude='.htaccess' \
-            --exclude='.env.local' \
+            --exclude='public/.htaccess' \
+            --exclude='.env*' \
+            --exclude='.git/' \
+            --exclude='.github/' \
+            --exclude='tests/' \
             -e "$RSYNC_RSH" \
             . "${SSH_USER}@${SSH_HOST}:${STAGE_REMOTE_DIR}"
 
@@ -140,12 +143,15 @@ jobs:
           RSYNC_RSH="ssh -p ${PORT} -o StrictHostKeyChecking=yes"
           rsync -avz --delete \
             --exclude='var/' \
-            --exclude='.htaccess' \
-            --exclude='.env.local' \
+            --exclude='public/.htaccess' \
+            --exclude='.env*' \
+            --exclude='.git/' \
+            --exclude='.github/' \
+            --exclude='tests/' \
             -e "$RSYNC_RSH" \
             . "${SSH_USER}@${SSH_HOST}:${TEMP_DIR}"
 
-          # Moving files on server, preserving .env.local and var/
+          # Moving files on server, preserving .env, .env.local and var/
           ssh -p ${PORT} ${SSH_USER}@${SSH_HOST} "bash -c '
             set -e
 
@@ -153,6 +159,7 @@ jobs:
             STAGE_REMOTE_DIR=\"${STAGE_REMOTE_DIR}\"
 
             # Backup critical file
+            cp \"\$STAGE_REMOTE_DIR/.env\" \"\$TEMP_DIR/.env\"
             cp \"\$STAGE_REMOTE_DIR/.env.local\" \"\$TEMP_DIR/.env.local\"
 
             # Sync code over old, preserving var/
@@ -181,5 +188,4 @@ jobs:
             \$PHP_BIN \"\$CONSOLE_PATH\" cache:clear --env=prod --no-interaction
             \$PHP_BIN \"\$CONSOLE_PATH\" cache:warmup --env=prod --no-interaction
             \$PHP_BIN \"\$CONSOLE_PATH\" importmap:install --env=prod --no-interaction
-            \$PHP_BIN \"\$CONSOLE_PATH\" doctrine:migrations:migrate --env=prod --no-interaction
           '"
