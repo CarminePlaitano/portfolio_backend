@@ -1,6 +1,33 @@
+SetEnv APP_ENV prod
+SetEnv APP_DEBUG 0
+SetEnv DEFAULT_URI https://stage.carmineplaitano.it
+
+<IfModule mod_php8.c>
+    AddHandler application/x-httpd-php8.4 .php
+</IfModule>
+
+# Protegge file sensibili
+<FilesMatch "\.(env|env\.local|env\.prod|lock|gitignore|git|yaml|yml|config|dist|md|xml)$">
+    Require all denied
+</FilesMatch>
+
+# Evita content negotiation che interferisce con le route
+Options -MultiViews
+
+# Default index
+DirectoryIndex index.php
+
+# Assicura che PATH_INFO funzioni
+AcceptPathInfo On
+
 <IfModule mod_rewrite.c>
-    Options -MultiViews
     RewriteEngine On
+    # Se il tuo sito è servito come root per questo host (stage.carmineplaitano.it),
+    # RewriteBase può essere "/" ; se invece è raggiungibile come /stage/public/ usa "/stage/public/"
+    RewriteBase /
+
+    # Se la richiesta non è un file o directory esistente, passa a index.php
     RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
     RewriteRule ^(.*)$ index.php [QSA,L]
 </IfModule>
