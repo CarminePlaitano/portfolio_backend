@@ -4,7 +4,8 @@
 
 {% block main_container %}
     <main class="form-signin w-75 m-auto">
-        <div class="mb-3">
+        
+        <div class="mb-3 text-center">
             <h1>carmineplaitano.it - CMS</h1>
             <h5>Sign up</h5>
         </div>
@@ -30,9 +31,10 @@
                         class: 'd-flex flex-column align-items-start mb-3'
                     }
                 }) }}
-                <i class="fas fa-eye position-absolute top-50 end-0 translate-middle-y me-3"
+                <i class="fas fa-eye position-absolute end-0 translate-middle-y me-3"
                    data-password-visibility-target="icon"
-                   data-action="click->password-visibility#toggle"></i>
+                   data-action="click->password-visibility#toggle"
+                   style="top: 45px;"></i>
             </div>
 
             <div data-controller="password-visibility" class="position-relative">
@@ -45,9 +47,10 @@
                         class: 'd-flex flex-column align-items-start mb-3'
                     }
                 }) }}
-                <i class="fas fa-eye position-absolute top-50 end-0 translate-middle-y me-3"
+                <i class="fas fa-eye position-absolute end-0 translate-middle-y me-3"
                    data-password-visibility-target="icon"
-                   data-action="click->password-visibility#toggle"></i>
+                   data-action="click->password-visibility#toggle"
+                   style="top: 45px;"></i>
             </div>
 
             {{ form_row(registrationForm.agreeTerms, {
