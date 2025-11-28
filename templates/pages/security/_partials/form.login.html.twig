@@ -1,0 +1,26 @@
+{{ form_start(loginForm, {'attr': {'class': 'text-center'}}) }}
+
+    <div class="d-flex flex-column align-items-start mb-3">
+        {{ form_label(loginForm.email) }}
+        {{ form_widget(loginForm.email, { attr: { class: 'form-control' } }) }}
+        {% for error in loginForm.email.vars.errors %}
+            <p class="text-danger mt-2">{{ error.message }}</p>
+        {% endfor %}
+    </div>
+
+    <div data-controller="password-visibility" class="position-relative">
+        <div class="d-flex flex-column align-items-start mb-3">
+            {{ form_label(loginForm.password) }}
+            {{ form_widget(loginForm.password, { attr: { class: 'form-control', 'data-password-visibility-target': 'input' } }) }}
+            {% for error in loginForm.password.vars.errors %}
+                <p class="text-danger mt-2">{{ error.message }}</p>
+            {% endfor %}
+        </div>
+        <i class="fas fa-eye position-absolute end-0 translate-middle-y me-3" data-password-visibility-target="icon" data-action="click->password-visibility#toggle" style="top: 45px;"></i>
+    </div>
+
+    <input type="hidden" name="_csrf_token" value={{ csrf_token('authenticate') }}>
+    
+    <button type="submit" class="btn btn-primary w-100 py-2" data-email-check-target="submit">Log in</button>
+
+{{ form_end(loginForm) }}
