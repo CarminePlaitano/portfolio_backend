@@ -3,7 +3,7 @@
 namespace App\Controller\Admin;
 
 use App\Entity\Contact;
-use App\Form\ContactType;
+use App\Form\ContactFormType;
 use App\Repository\ContactRepository;
 use App\Service\ContactTableService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -85,7 +85,7 @@ class ContactMeController extends AbstractController
     public function new(Request $request): Response
     {
         $contact = new Contact();
-        $form = $this->createForm(ContactType::class, $contact);
+        $form = $this->createForm(ContactFormType::class, $contact);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
@@ -110,7 +110,7 @@ class ContactMeController extends AbstractController
             throw $this->createNotFoundException('No contact found for id '.$id);
         }
 
-        $form = $this->createForm(ContactType::class, $contact);
+        $form = $this->createForm(ContactFormType::class, $contact);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {

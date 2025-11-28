@@ -1,0 +1,44 @@
+{{ form_start(registrationForm, {'attr': {'class': 'text-center'}}) }}
+
+    <div class="d-flex flex-column align-items-start mb-3">
+        {{ form_label(registrationForm.email) }}
+        {{ form_widget(registrationForm.email, { attr: { class: 'form-control', 'data-email-check-target': 'email', 'data-action': 'input->email-check#checkEmail' } }) }}
+        <div data-email-check-target="emailError" class="text-danger mt-2" style="display: none;"></div>
+        {% for error in registrationForm.email.vars.errors %}
+            <p class="text-error mt-2">{{ error.message }}</p>
+        {% endfor %}
+    </div>
+
+    <div data-controller="password-visibility" class="position-relative">
+        <div class="d-flex flex-column align-items-start mb-3">
+            {{ form_label(registrationForm.password.first) }}
+            {{ form_widget(registrationForm.password.first, { attr: { class: 'form-control', 'data-password-visibility-target': 'input' } }) }}
+            {% for error in registrationForm.password.first.vars.errors %}
+                <p class="text-danger mt-2">{{ error.message }}</p>
+            {% endfor %}
+        </div>
+        <i class="fas fa-eye position-absolute end-0 translate-middle-y me-3" data-password-visibility-target="icon" data-action="click->password-visibility#toggle" style="top: 45px;"></i>
+    </div>
+
+    <div data-controller="password-visibility" class="position-relative">
+        <div class="d-flex flex-column align-items-start mb-3">
+            {{ form_label(registrationForm.password.second) }}
+            {{ form_widget(registrationForm.password.second, { attr: { class: 'form-control', 'data-password-visibility-target': 'input' } }) }}
+            {% for error in registrationForm.password.second.vars.errors %}
+                <p class="text-danger mt-2">{{ error.message }}</p>
+            {% endfor %}
+        </div>
+        <i class="fas fa-eye position-absolute end-0 translate-middle-y me-3" data-password-visibility-target="icon" data-action="click->password-visibility#toggle" style="top: 45px;"></i>
+    </div>
+
+    <div class="d-flex flex-row align-items-center mb-3 gap-2">
+        {{ form_widget(registrationForm.agreeTerms) }}
+        {{ form_label(registrationForm.agreeTerms) }}
+        {% for error in registrationForm.agreeTerms.vars.errors %}
+            <p class="text-danger mt-2">{{ error.message }}</p>
+        {% endfor %}
+    </div>
+
+    <button type="submit" class="btn btn-primary w-100 py-2" data-email-check-target="submit">Sign up</button>
+
+{{ form_end(registrationForm) }}
