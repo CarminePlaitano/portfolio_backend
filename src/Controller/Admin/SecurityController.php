@@ -3,7 +3,6 @@
 namespace App\Controller\Admin;
 
 use App\Entity\User;
-use App\Form\LoginFormType;
 use App\Form\SignUpFormType;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -16,21 +15,28 @@ use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 class SecurityController extends AbstractController
 {
     #[Route(path: '/login', name: 'app_login')]
-    public function login(Request $request, AuthenticationUtils $authenticationUtils): Response
+    public function login(AuthenticationUtils $authenticationUtils): Response
     {
+        // get the login error if there is one
         if ($this->getUser()) {
             return $this->redirectToRoute('app_home');
         }
 
-        $form = $this->createForm(LoginFormType::class);
-        $form->handleRequest($request);
-
         $error = $authenticationUtils->getLastAuthenticationError();
 
+        // last username entered by the user
+        $lastUsername = $authenticationUtils->getLastUsername();
+
         return $this->render('pages/security/login.html.twig', [
-            'loginForm' => $form->createView(),
+            'last_username' => $lastUsername,
             'error' => $error,
         ]);
+    }
+
+    #[Route(path: '/logout', name: 'app_logout')]
+    public function logout(): void
+    {
+        throw new \LogicException('This method can be blank - it will be intercepted by the logout key on your firewall.');
     }
 
     #[Route(path: '/signup', name: 'app_signup')]
@@ -59,11 +65,5 @@ class SecurityController extends AbstractController
         return $this->render('pages/security/signup.html.twig', [
             'registrationForm' => $form,
         ]);
-    }
-
-    #[Route(path: '/logout', name: 'app_logout')]
-    public function logout(): void
-    {
-        throw new \LogicException('This method can be blank - it will be intercepted by the logout key on your firewall.');
     }
 }

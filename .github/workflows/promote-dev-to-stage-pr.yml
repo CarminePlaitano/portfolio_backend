@@ -41,7 +41,7 @@ jobs:
         run: composer install --no-interaction --no-progress --prefer-dist --optimize-autoloader
 
       - name: Run Pest tests
-        run: vendor/bin/pest --colors=always
+        run: vendor/bin/pest
 
   create-and-merge-pr:
     needs: test
