@@ -40,8 +40,8 @@ jobs:
       - name: Install Composer dependencies
         run: composer install --no-interaction --no-progress --prefer-dist --optimize-autoloader
 
-      - name: Run Pest tests
-        run: vendor/bin/pest --colors=always
+      - name: Run Phpunit tests
+        run: vendor/bin/phpunit
 
   create-and-merge-pr:
     needs: test
