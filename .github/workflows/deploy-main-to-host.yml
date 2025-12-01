@@ -39,7 +39,7 @@ jobs:
       - name: Install Composer dependencies
         run: composer install --no-interaction --no-progress --prefer-dist --optimize-autoloader
 
-      - name: Run Phpunit tests
+      - name: Run Pest tests
         env:
           APP_SECRET: ${{ secrets.TEST_APP_SECRET }}
           DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
@@ -49,7 +49,7 @@ jobs:
           chmod -R 0777 var
           php bin/console doctrine:schema:create
           rm -rf var/cache/test
-          vendor/bin/phpunit
+          vendor/bin/pest
 
   build:
     needs: test
