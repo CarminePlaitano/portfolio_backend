@@ -2,15 +2,20 @@
 
 namespace App\Controller\Admin;
 
+use App\Domain\Contact\Command\CreateContactCommand;
+use App\Domain\Contact\Command\DeleteContactCommand;
+use App\Domain\Contact\Command\UpdateContactCommand;
 use App\Entity\Contact;
 use App\Form\ContactFormType;
 use App\Repository\ContactRepository;
 use App\Service\ContactTableService;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Messenger\HandleTrait;
+use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -18,11 +23,15 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_USER')]
 class ContactMeController extends AbstractController
 {
+    use HandleTrait;
+
     public function __construct(
         private readonly ContactTableService $contactTableService,
-        private readonly EntityManagerInterface $entityManager,
         private readonly ContactRepository $contactRepository,
+        #[Autowire(service: 'command.bus')]
+        MessageBusInterface $messageBus
     ) {
+        $this->messageBus = $messageBus;
     }
 
     #[Route('/', name: 'app_contact_me_index', methods: ['GET'])]
@@ -89,8 +98,13 @@ class ContactMeController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $this->entityManager->persist($contact);
-            $this->entityManager->flush();
+            $command = new CreateContactCommand(
+                $contact->getType(),
+                $contact->getValue(),
+                $contact->getContactBy(),
+                $contact->getLabel()
+            );
+            $this->handle($command);
 
             $this->addFlash('success', 'Contact created successfully.');
 
@@ -114,7 +128,14 @@ class ContactMeController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $this->entityManager->flush();
+            $command = new UpdateContactCommand(
+                $contact->getId(),
+                $contact->getType(),
+                $contact->getValue(),
+                $contact->getContactBy(),
+                $contact->getLabel()
+            );
+            $this->handle($command);
 
             $this->addFlash('success', 'Contact updated successfully.');
 
@@ -130,8 +151,8 @@ class ContactMeController extends AbstractController
     public function delete(Request $request, Contact $contact): Response
     {
         if ($this->isCsrfTokenValid('delete'.$contact->getId(), $request->request->get('_token'))) {
-            $this->entityManager->remove($contact);
-            $this->entityManager->flush();
+            $command = new DeleteContactCommand($contact->getId());
+            $this->handle($command);
             $this->addFlash('success', 'Contact deleted successfully.');
         }
 

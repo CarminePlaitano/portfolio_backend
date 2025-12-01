@@ -12,15 +12,16 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/api/query/contact')]
-#[IsGranted('ROLE_ADMIN')]
+
 class ContactQueryController extends AbstractController
 {
     use HandleTrait;
 
     public function __construct(
         #[Autowire(service: 'query.bus')]
-        private readonly MessageBusInterface $messageBus,
+        MessageBusInterface $messageBus
     ) {
+        $this->messageBus = $messageBus;
     }
 
     #[Route('/v1/list', name: 'app_api_contact_query_list', methods: ['GET'])]

@@ -28,9 +28,7 @@ framework:
             Symfony\Component\Notifier\Message\SmsMessage: async
 
             # Route your messages to the transports
-            'App\Domain\Contact\Query\GetAllContactsQuery':
-                bus: query.bus
-            'App\Domain\Contact\Command\CreateContactCommand':
-                bus: command.bus
-            'App\Domain\Contact\Command\UpdateContactCommand':
-                bus: command.bus
+            'App\Domain\Contact\Query\GetAllContactsQuery': sync
+            'App\Domain\Contact\Command\CreateContactCommand': sync
+            'App\Domain\Contact\Command\UpdateContactCommand': sync
+            'App\Domain\Contact\Command\DeleteContactCommand': sync

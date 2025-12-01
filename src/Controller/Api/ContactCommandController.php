@@ -21,8 +21,9 @@ class ContactCommandController extends AbstractController
 
     public function __construct(
         #[Autowire(service: 'command.bus')]
-        private readonly MessageBusInterface $messageBus
+        MessageBusInterface $messageBus
     ) {
+        $this->messageBus = $messageBus;
     }
 
     #[Route('/v1/create', name: 'app_api_contact_command_create', methods: ['POST'])]
