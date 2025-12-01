@@ -8,14 +8,13 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
-#[isGranted('ROLE_ADMIN')]
+#[IsGranted('ROLE_ADMIN')]
 #[Route('/user')]
 class UserController extends AbstractController
 {
     public function __construct(
-        private readonly UserRepository $userRepository
-    )
-    {
+        private readonly UserRepository $userRepository,
+    ) {
     }
 
     #[IsGranted('ROLE_ADMIN')]
@@ -24,10 +23,12 @@ class UserController extends AbstractController
     {
         $user = $this->userRepository->findOneBy(['id' => $id]);
 
-        if (!$user) throw $this->createNotFoundException('User not found');
+        if (!$user) {
+            throw $this->createNotFoundException('User not found');
+        }
 
         return $this->render('pages/user/detail.html.twig', [
-            'user' => $user
+            'user' => $user,
         ]);
     }
 }

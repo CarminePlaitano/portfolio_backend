@@ -18,12 +18,11 @@
     <body class="min-vh-100 h-100">
         {% block body %}
             <div class="content d-flex min-vh-100">
-                {% if is_granted('ROLE_ADMIN') %}
+                {% if app.user %}
                     {% block sidebar %}
                         {% include 'layout/sidebar.html.twig' %}
                     {% endblock %}
                 {% endif %}
-
                 <div class="main-container container-fluid p-4">
                     {% block main_container %}
                         {% block page_title %}
