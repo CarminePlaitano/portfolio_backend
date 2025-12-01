@@ -39,8 +39,15 @@ jobs:
       - name: Install Composer dependencies
         run: composer install --no-interaction --no-progress --prefer-dist --optimize-autoloader
 
-      - name: Run Pest tests
-        run: vendor/bin/pest --colors=always
+      - name: Run Phpunit tests
+        env:
+          APP_SECRET: ${{ secrets.TEST_APP_SECRET }}
+          DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
+          DEFAULT_URI: ${{ secrets.TEST_DEFAULT_URI }}
+        run: |
+          php bin/console doctrine:schema:create
+          rm -rf var/cache/test
+          vendor/bin/phpunit
 
   build:
     needs: test
