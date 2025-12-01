@@ -18,3 +18,19 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+
+    App\Domain\Contact\Query\GetAllContactsQueryHandler:
+        tags:
+            - { name: messenger.message_handler, bus: query.bus }
+
+    App\Domain\Contact\Command\CreateContactCommandHandler:
+        tags:
+            - { name: messenger.message_handler, bus: command.bus }
+
+    App\Domain\Contact\Command\UpdateContactCommandHandler:
+        tags:
+            - { name: messenger.message_handler, bus: command.bus }
+    
+    App\Domain\Contact\Command\DeleteContactCommandHandler:
+        tags:
+            - { name: messenger.message_handler, bus: command.bus }

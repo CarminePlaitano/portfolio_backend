@@ -13,12 +13,14 @@ framework:
                     max_retries: 3
                     multiplier: 2
             failed: 'doctrine://default?queue_name=failed'
-            # sync: 'sync://'
+            sync: 'sync://'
 
         default_bus: messenger.bus.default
 
         buses:
             messenger.bus.default: []
+            query.bus: ~
+            command.bus: ~
 
         routing:
             Symfony\Component\Mailer\Messenger\SendEmailMessage: async
@@ -26,4 +28,7 @@ framework:
             Symfony\Component\Notifier\Message\SmsMessage: async
 
             # Route your messages to the transports
-            # 'App\Message\YourMessage': async
+            'App\Domain\Contact\Query\GetAllContactsQuery': sync
+            'App\Domain\Contact\Command\CreateContactCommand': sync
+            'App\Domain\Contact\Command\UpdateContactCommand': sync
+            'App\Domain\Contact\Command\DeleteContactCommand': sync
