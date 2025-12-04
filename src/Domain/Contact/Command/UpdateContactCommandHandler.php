@@ -21,12 +21,11 @@ class UpdateContactCommandHandler
         $contact = $this->contactRepository->find($command->getId());
 
         if (!$contact) {
-            throw new \Exception('Contact with id ' . $command->getId() . ' not found');
+            throw new \Exception('Contact with id '.$command->getId().' not found');
         }
 
         $contact->setType($command->getType());
         $contact->setValue($command->getValue());
-        $contact->setContactBy($command->getContactBy());
         $contact->setLabel($command->getLabel());
 
         $this->entityManager->flush();

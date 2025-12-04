@@ -19,9 +19,6 @@ class Contact
     #[ORM\Column(length: 255)]
     private ?string $value = null;
 
-    #[ORM\Column(length: 255)]
-    private ?string $contact_by = null;
-
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $label = null;
 
@@ -50,18 +47,6 @@ class Contact
     public function setValue(string $value): static
     {
         $this->value = $value;
-
-        return $this;
-    }
-
-    public function getContactBy(): ?string
-    {
-        return $this->contact_by;
-    }
-
-    public function setContactBy(string $contact_by): static
-    {
-        $this->contact_by = $contact_by;
 
         return $this;
     }

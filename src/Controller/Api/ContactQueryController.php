@@ -9,17 +9,15 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Messenger\HandleTrait;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/api/query/contact')]
-
 class ContactQueryController extends AbstractController
 {
     use HandleTrait;
 
     public function __construct(
         #[Autowire(service: 'query.bus')]
-        MessageBusInterface $messageBus
+        MessageBusInterface $messageBus,
     ) {
         $this->messageBus = $messageBus;
     }
