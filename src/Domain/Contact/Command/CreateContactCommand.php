@@ -6,14 +6,12 @@ class CreateContactCommand
 {
     private string $type;
     private string $value;
-    private string $contactBy;
     private ?string $label;
 
-    public function __construct(string $type, string $value, string $contactBy, ?string $label)
+    public function __construct(string $type, string $value, ?string $label)
     {
         $this->type = $type;
         $this->value = $value;
-        $this->contactBy = $contactBy;
         $this->label = $label;
     }
 
@@ -25,11 +23,6 @@ class CreateContactCommand
     public function getValue(): string
     {
         return $this->value;
-    }
-
-    public function getContactBy(): string
-    {
-        return $this->contactBy;
     }
 
     public function getLabel(): ?string

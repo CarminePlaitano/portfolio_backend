@@ -1,0 +1,35 @@
+<turbo-frame id="contact-table">
+    <div class="modal d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        {% if contact.id %}Edit Contact{% else %}New Contact{% endif %}
+                    </h5>
+                    <a href="{{ path('app_contact_me_index') }}" 
+                       class="btn-close" 
+                       data-turbo-frame="contact-table"></a>
+                </div>
+                
+                {{ form_start(form, {
+                    'attr': {
+                        'data-turbo-frame': 'contact-table'
+                    }
+                }) }}
+                
+                <div class="modal-body">
+                    {{ form_widget(form) }}
+                </div>
+                
+                <div class="modal-footer">
+                    <a href="{{ path('app_contact_me_index') }}" 
+                       class="btn btn-secondary"
+                       data-turbo-frame="contact-table">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+                
+                {{ form_end(form) }}
+            </div>
+        </div>
+    </div>
+</turbo-frame>
