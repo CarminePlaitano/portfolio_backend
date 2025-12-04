@@ -1,16 +1,16 @@
 <div class="sidebar d-flex flex-column flex-shrink-0 p-3 text-white bg-dark w-25" style="box-sizing: content-box;" data-controller="sidebar">
 
 	{% if app.user %}
-        <a href="{{ path('app_user_detail', {id: app.user.id}) }}" class="d-flex align-items-center text-white text-decoration-none">
-            <img src="https://github.com/CarminePlaitano.png" alt="" width="32" height="32" class="rounded-circle me-2">
-            <strong>{{ app.user.email }}</strong>
-        </a>
-    {% else %}
-        <a href="{{ path('app_login') }}" class="d-flex align-items-center text-white text-decoration-none">
-            <img src="https://github.com/CarminePlaitano.png" alt="" width="32" height="32" class="rounded-circle me-2">
-            <strong>Guest</strong>
-        </a>
-    {% endif %}
+		<a href="{{ path('app_user_detail', {id: app.user.id}) }}" class="d-flex align-items-center text-white text-decoration-none">
+			<img src="https://github.com/CarminePlaitano.png" alt="" width="32" height="32" class="rounded-circle me-2">
+			<strong>{{ app.user.email }}</strong>
+		</a>
+	{% else %}
+		<a href="{{ path('app_login') }}" class="d-flex align-items-center text-white text-decoration-none">
+			<img src="https://github.com/CarminePlaitano.png" alt="" width="32" height="32" class="rounded-circle me-2">
+			<strong>Guest</strong>
+		</a>
+	{% endif %}
 
 	<hr>
 	<ul class="nav nav-pills flex-column mb-auto" data-sidebar-target="links">
@@ -21,44 +21,47 @@
 			</a>
 		</li>
 		{% if is_granted('ROLE_ADMIN') %}
-		<li class="nav-item">
-			<a href="{{ path('app_intro') }}" class="nav-link text-white" aria-current="page">
-				<i class="fa-regular fa-address-card me-2"></i>
-				Intro
-			</a>
-		</li>
+			<li class="nav-item">
+				<a href="{{ path('app_intro') }}" class="nav-link text-white" aria-current="page">
+					<i class="fa-regular fa-address-card me-2"></i>
+					Intro
+				</a>
+			</li>
 		{% endif %}
 		{% if is_granted('ROLE_ADMIN') %}
-		<li>
-			<a href="{{ path('app_about_me') }}" class="nav-link text-white">
-				<i class="fa-solid fa-user me-2"></i>
-				About Me
-			</a>
-		</li>
+			<li>
+				<a href="{{ path('app_about_me') }}" class="nav-link text-white">
+					<i class="fa-solid fa-user me-2"></i>
+					About Me
+				</a>
+			</li>
 		{% endif %}
 		{% if is_granted('ROLE_ADMIN') %}
-		<li>
-			<a href="{{ path('app_tech_stack') }}" class="nav-link text-white">
-				<i class="fa-solid fa-microchip me-2"></i>
-				Tech Stack
-			</a>
-		</li>
+			<li>
+				<a href="{{ path('app_tech_stack') }}" class="nav-link text-white">
+					<i class="fa-solid fa-microchip me-2"></i>
+					Tech Stack
+				</a>
+			</li>
 		{% endif %}
 		{% if is_granted('ROLE_ADMIN') %}
-		<li>
-			<a href="{{ path('app_reviews') }}" class="nav-link text-white">
-				<i class="fa-solid fa-comment me-2"></i>
-				Reviews
-			</a>
-		</li>
+			<li>
+				<a href="{{ path('app_reviews') }}" class="nav-link text-white">
+					<i class="fa-solid fa-comment me-2"></i>
+					Reviews
+				</a>
+			</li>
 		{% endif %}
 		{% if is_granted('ROLE_USER') %}
-		<li>
-			<a href="{{ path('app_contact_me_index') }}" class="nav-link text-white">
-				<i class="fa-solid fa-address-book me-2"></i>
-				Contact Me
-			</a>
-		</li>
+			<li>
+				<a href="{{ path('app_contact_me_index') }}" class="nav-link text-white">
+					<i class="fa-solid fa-address-book me-2"></i>
+					Contact Me
+				</a>
+			</li>
 		{% endif %}
 	</ul>
+	<a href="{{ path('app_logout') }}" class="d-flex align-items-center text-white text-decoration-none">
+		<strong>Log out</strong>
+	</a>
 </div>
