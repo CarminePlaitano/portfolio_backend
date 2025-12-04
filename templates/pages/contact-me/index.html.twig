@@ -1,79 +1,106 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Contacts{% endblock %}
+{% block title %}Contacts
+{% endblock %}
 
 {% block main_container %}
 	{{ parent() }}
 
-	<div class="container py-4" data-controller="contact-me" data-contact-me-url-value="{{ path('app_contact_me_list') }}">
+	<div class="container py-4" data-controller="contact-me">
 		<div class="row mb-3 align-items-center">
+			<div class="col-md-8">
+				<form action="{{ path('app_contact_me_index') }}" method="get" data-turbo-frame="contact-table" class="row gx-2">
+					<div class="col">
+						<input type="search" name="search" class="form-control" placeholder="Search by type, value or label..." value="{{ search | default('') }}" aria-label="Search"/>
+					</div>
+
+					<div class="col-auto">
+						<select name="perPage" class="form-select" aria-label="Items per page" onchange="this.form.submit()">
+							{% for n in [10,15,25,50,100] %}
+								<option value="{{ n }}" {% if n == itemsPerPage %} selected {% endif %}>{{ n }}</option>
+							{% endfor %}
+						</select>
+					</div>
+				</form>
+			</div>
+
 			<div class="col-md-4">
-				<input type="search" class="form-control" placeholder="Search by type, value or label..." data-contact-me-target="search" value="{{ app.request.get('search', '') }}" aria-label="Search"/>
-			</div>
-
-			<div class="col-md-3">
-				<select class="form-select" data-contact-me-target="contactBy">
-					<option value="">All contact by</option>
-					{% for contactBy in distinctContactByValues %}
-						<option value="{{ contactBy }}" {{ contactBy == app.request.get('contact_by') ? 'selected' : '' }}>{{ contactBy }}</option>
-					{% endfor %}
-				</select>
-			</div>
-
-			<div class="col-md-5 text-end">
-				<a href="{{ path('app_contact_me_new') }}" class="btn btn-success">
+				<a href="{{ path('app_contact_me_new') }}" class="btn btn-success d-block" data-turbo-frame="contact-table">
 					<i class="bi bi-plus-lg"></i>
 					New Contact
 				</a>
 			</div>
 		</div>
 
-
-		<div class="table-responsive">
-			<table class="table table-hover" id="contacts-table">
-				<thead class="table-light">
-					<tr>
-						<th>Type</th>
-						<th>Value</th>
-						<th>Contact by</th>
-						<th>Label</th>
-						<th class="text-end">Actions</th>
-					</tr>
-				</thead>
-				<tbody data-contact-me-target="tbody">
-					{% for contact in contacts %}
+		<turbo-frame id="contact-table">
+			<div class="table-responsive">
+				<table class="table table-hover table-striped table-bordered align-middle">
+					<thead class="table-light">
 						<tr>
-							<td>{{ contact.type }}</td>
-							<td>{{ contact.value }}</td>
-							<td>{{ contact.contactBy }}</td>
-							<td>{{ contact.label }}</td>
-							<td class="text-end">
-								<a href="{{ path('app_contact_me_edit', {id: contact.id}) }}" class="btn btn-sm btn-primary">Edit</a>
-
-								<form method="post" action="{{ path('app_contact_me_delete', {id: contact.id}) }}" onsubmit="return confirm('Are you sure?');" class="d-inline">
-									<input type="hidden" name="_token" value="{{ csrf_token('delete' ~ contact.id) }}">
-									<button class="btn btn-sm btn-danger">Delete</button>
-								</form>
-							</td>
+							<th scope="col">Value</th>
+							<th scope="col">Type</th>
+							<th scope="col">Label</th>
+							<th scope="col" class="text-end">Actions</th>
 						</tr>
-					{% else %}
-						<tr>
-							<td colspan="5" class="text-center">No contacts found.</td>
-						</tr>
-					{% endfor %}
-				</tbody>
-			</table>
-		</div>
+					</thead>
+					<tbody>
+						{% if contacts is empty %}
+							<tr>
+								<td colspan="4">
+									<div class="alert alert-info mb-0">No result.</div>
+								</td>
+							</tr>
+						{% else %}
+							{% for contact in contacts %}
+								<tr>
+									<td>{{ contact.value }}</td>
+									<td>{{ contact.type }}</td>
+									<td>{{ contact.label ?? '' }}</td>
+									<td class="text-end">
+										<a href="{{ path('app_contact_me_edit', {'id': contact.id}) }}" class="btn btn-sm btn-outline-primary me-1" data-turbo-frame="contact-table">Modifica</a>
 
-		<nav aria-label="Contacts pagination">
-			<ul class="pagination justify-content-center" data-contact-me-target="pagination">
-				{% set current = page|default(1) %}
-				{% for p in 1..totalPages %}
-					<li class="page-item {{ p == current ? 'active' : '' }}">
-						<a class="page-link" href="{{ path('app_contact_me_index', app.request.query.all|merge({'page': p})) }}">{{ p }}</a>
-					</li>
-				{% endfor %}
-			</ul>
-		</nav>
+										{# <a href="{{ path('app_contact_me_delete', {'id': contact.id}) }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Sei sicuro?')">Elimina</a> #}
+										<form method="post" action="{{ path('app_contact_me_delete', {'id': contact.id}) }}" data-turbo-frame="contact-table" onsubmit="return confirm('Sei sicuro?')" style="display: inline;">
+											<input type="hidden" name="_token" value="{{ csrf_token('delete' ~ contact.id) }}">
+											<button type="submit" class="btn btn-sm btn-outline-danger">Elimina</button>
+										</form>
+									</td>
+								</tr>
+							{% endfor %}
+						{% endif %}
+					</tbody>
+				</table>
+			</div>
+
+			<div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between mt-3">
+				<div class="mb-2 mb-sm-0">
+					<small class="text-muted">
+						{{ currentPage }}
+						-
+						{{ totalPages }}
+						/ Total:
+						{{ totalContacts }}
+					</small>
+				</div>
+
+				<nav aria-label="Pagination">
+					<ul class="pagination mb-0">
+						<li class="page-item {% if currentPage <= 1 %}disabled{% endif %}">
+							<a class="page-link" href="{{ path('app_contact_me_index', {'page': currentPage - 1, 'perPage': itemsPerPage, 'search': search}) }}" aria-label="Precedente" data-turbo-frame="contact-table">&laquo;</a>
+						</li>
+
+						{% for i in 1..totalPages %}
+							<li class="page-item {% if i == currentPage %}active{% endif %}">
+								<a class="page-link" href="{{ path('app_contact_me_index', {'page': i, 'perPage': itemsPerPage, 'search': search}) }}" {% if i == currentPage %} aria-current="page" {% endif %} data-turbo-frame="contact-table">{{ i }}</a>
+							</li>
+						{% endfor %}
+
+						<li class="page-item {% if currentPage >= totalPages %}disabled{% endif %}">
+							<a class="page-link" href="{{ path('app_contact_me_index', {'page': currentPage + 1, 'perPage': itemsPerPage, 'search': search}) }}" aria-label="Successivo" data-turbo-frame="contact-table">&raquo;</a>
+						</li>
+					</ul>
+				</nav>
+			</div>
+		</turbo-frame>
 	</div>
 {% endblock %}

@@ -11,7 +11,6 @@ use App\Repository\ContactRepository;
 use App\Service\ContactTableService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Messenger\HandleTrait;
@@ -29,64 +28,28 @@ class ContactMeController extends AbstractController
         private readonly ContactTableService $contactTableService,
         private readonly ContactRepository $contactRepository,
         #[Autowire(service: 'command.bus')]
-        MessageBusInterface $messageBus
+        MessageBusInterface $messageBus,
     ) {
         $this->messageBus = $messageBus;
     }
 
-    #[Route('/', name: 'app_contact_me_index', methods: ['GET'])]
+    #[Route('/', name: 'app_contact_me_index', methods: ['GET', 'POST'])]
     public function index(Request $request): Response
     {
         $page = max(1, (int) $request->query->get('page', 1));
         $itemsPerPage = (int) $request->query->get('perPage', 15);
 
-        $filters = [
-            'type' => $request->query->get('type'),
-            'contact_by' => $request->query->get('contact_by'),
-            'search' => $request->query->get('search'),
-        ];
+        $search = $request->query->get('search');
 
-        $result = $this->contactTableService->list($filters, $page, $itemsPerPage);
+        $result = $this->contactTableService->getAllForTableBySearch($search, $page, $itemsPerPage);
 
         return $this->render('pages/contact-me/index.html.twig', [
             'contacts' => $result['data'],
+            'search' => $search,
             'totalContacts' => $result['total'],
             'currentPage' => $page,
             'itemsPerPage' => $itemsPerPage,
             'totalPages' => (int) ceil($result['total'] / $itemsPerPage),
-            'distinctContactByValues' => $this->contactTableService->getDistinctContactBy(),
-        ]);
-    }
-
-    #[Route('/list', name: 'app_contact_me_list', methods: ['GET'])]
-    public function list(Request $request): JsonResponse
-    {
-        $page = max(1, (int) $request->query->get('page', 1));
-        $perPage = (int) $request->query->get('perPage', 15);
-
-        $filters = [
-            'type' => $request->query->get('type'),
-            'contact_by' => $request->query->get('contact_by'),
-            'search' => $request->query->get('search'),
-        ];
-
-        $result = $this->contactTableService->list($filters, $page, $perPage);
-
-        $contactsAsArray = array_map(function ($contactEntity) {
-            return [
-                'id' => $contactEntity->getId(),
-                'type' => $contactEntity->getType(),
-                'value' => $contactEntity->getValue(),
-                'contactBy' => $contactEntity->getContactBy(),
-                'label' => $contactEntity->getLabel(),
-            ];
-        }, $result['data']);
-
-        return $this->json([
-            'data' => $contactsAsArray,
-            'total' => $result['total'],
-            'page' => $page,
-            'perPage' => $perPage,
         ]);
     }
 
@@ -101,18 +64,18 @@ class ContactMeController extends AbstractController
             $command = new CreateContactCommand(
                 $contact->getType(),
                 $contact->getValue(),
-                $contact->getContactBy(),
                 $contact->getLabel()
             );
-            $this->handle($command);
 
+            $this->handle($command);
             $this->addFlash('success', 'Contact created successfully.');
 
             return $this->redirectToRoute('app_contact_me_index');
         }
 
-        return $this->render('pages/contact-me/new.html.twig', [
+        return $this->render('pages/contact-me/_partials/modal-form.html.twig', [
             'form' => $form->createView(),
+            'contact' => $contact,
         ]);
     }
 
@@ -132,18 +95,18 @@ class ContactMeController extends AbstractController
                 $contact->getId(),
                 $contact->getType(),
                 $contact->getValue(),
-                $contact->getContactBy(),
                 $contact->getLabel()
             );
-            $this->handle($command);
 
+            $this->handle($command);
             $this->addFlash('success', 'Contact updated successfully.');
 
             return $this->redirectToRoute('app_contact_me_index');
         }
 
-        return $this->render('pages/contact-me/edit.html.twig', [
+        return $this->render('pages/contact-me/_partials/modal-form.html.twig', [
             'form' => $form->createView(),
+            'contact' => $contact,
         ]);
     }
 
