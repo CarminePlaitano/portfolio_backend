@@ -19,7 +19,6 @@ class CreateContactCommandHandler
         $contact = new Contact();
         $contact->setType($command->getType());
         $contact->setValue($command->getValue());
-        $contact->setContactBy($command->getContactBy());
         $contact->setLabel($command->getLabel());
 
         $this->entityManager->persist($contact);

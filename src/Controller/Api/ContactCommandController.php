@@ -21,7 +21,7 @@ class ContactCommandController extends AbstractController
 
     public function __construct(
         #[Autowire(service: 'command.bus')]
-        MessageBusInterface $messageBus
+        MessageBusInterface $messageBus,
     ) {
         $this->messageBus = $messageBus;
     }
@@ -34,7 +34,6 @@ class ContactCommandController extends AbstractController
         $command = new CreateContactCommand(
             $data['type'],
             $data['value'],
-            $data['contact_by'],
             $data['label'] ?? null
         );
 
@@ -55,7 +54,6 @@ class ContactCommandController extends AbstractController
             $id,
             $data['type'],
             $data['value'],
-            $data['contact_by'],
             $data['label'] ?? null
         );
 
