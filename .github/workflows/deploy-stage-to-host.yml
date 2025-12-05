@@ -70,6 +70,12 @@ jobs:
           extensions: mbstring, intl, pdo, pdo_mysql, xml, opcache
           coverage: none
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
       - name: Setup Composer cache
         uses: actions/cache@v4
         with:
@@ -82,6 +88,12 @@ jobs:
         run: |
           composer install --no-interaction --no-progress --no-dev --prefer-dist --optimize-autoloader --no-scripts
 
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Build assets for production
+        run: npm run build
+
       - name: Upload production artifact
         uses: actions/upload-artifact@v4
         with:
@@ -91,9 +103,10 @@ jobs:
             !.git
             !.github
             !tests/
+            !node_modules
           if-no-files-found: error
           include-hidden-files: true
-          
+
   deploy:
     needs: build
     runs-on: ubuntu-latest
