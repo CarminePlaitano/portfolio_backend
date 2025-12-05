@@ -188,4 +188,6 @@ jobs:
             # Symfony cache commands
             \$PHP_BIN \"\$CONSOLE_PATH\" cache:clear --env=prod --no-interaction
             \$PHP_BIN \"\$CONSOLE_PATH\" cache:warmup --env=prod --no-interaction
+            \$PHP_BIN \"\$CONSOLE_PATH\" importmap:install --env=prod --no-interaction
+            \$PHP_BIN \"\$CONSOLE_PATH\" asset-map:compile --env=prod --no-interaction
           '"
