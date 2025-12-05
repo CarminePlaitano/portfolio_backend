@@ -67,12 +67,6 @@ jobs:
           extensions: mbstring, intl, pdo, pdo_mysql, xml, opcache
           coverage: none
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
       - name: Setup Composer cache
         uses: actions/cache@v4
         with:
@@ -84,12 +78,6 @@ jobs:
       - name: Install Composer dependencies for production
         run: |
           composer install --no-interaction --no-progress --no-dev --prefer-dist --optimize-autoloader --no-scripts
-
-      - name: Install Node dependencies
-        run: npm ci
-
-      - name: Build assets for production
-        run: npm run build
 
       - name: Upload production artifact
         uses: actions/upload-artifact@v4
