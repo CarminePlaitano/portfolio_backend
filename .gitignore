@@ -1,6 +1,7 @@
 .idea
 /node_modules
 /public/.htaccess
+.vscode
 
 # symfony/framework-bundle
 .env.local
