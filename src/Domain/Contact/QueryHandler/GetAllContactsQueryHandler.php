@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Domain\Contact\Query;
+namespace App\Domain\Contact\QueryHandler;
 
+use App\Domain\Contact\Query\GetAllContactsQuery;
 use App\Repository\ContactRepository;
 
 class GetAllContactsQueryHandler

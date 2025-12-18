@@ -13,6 +13,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Messenger\Exception\HandlerFailedException;
 use Symfony\Component\Messenger\HandleTrait;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Attribute\Route;
@@ -67,10 +68,22 @@ class ContactMeController extends AbstractController
                 $contact->getLabel()
             );
 
-            $this->handle($command);
-            $this->addFlash('success', 'Contact created successfully.');
+            try {
+                $this->handle($command);
+                $this->addFlash('success', 'Contact created successfully.');
 
-            return $this->redirectToRoute('app_contact_me_index');
+                return $this->redirectToRoute('app_contact_me_index');
+            } catch (HandlerFailedException $e) {
+                $this->addFlash('danger', 'An error occurred while creating the contact.');
+
+                return $this->render('pages/contact-me/_partials/modal-form.html.twig', [
+                    'form' => $form->createView(),
+                    'contact' => $contact,
+                ], new Response(
+                    null,
+                    Response::HTTP_UNPROCESSABLE_ENTITY
+                ));
+            }
         }
 
         return $this->render('pages/contact-me/_partials/modal-form.html.twig', [
@@ -107,7 +120,10 @@ class ContactMeController extends AbstractController
         return $this->render('pages/contact-me/_partials/modal-form.html.twig', [
             'form' => $form->createView(),
             'contact' => $contact,
-        ]);
+        ], new Response(
+            null,
+            $form->isSubmitted() && !$form->isValid() ? Response::HTTP_UNPROCESSABLE_ENTITY : Response::HTTP_OK,
+        ));
     }
 
     #[Route('/delete/{id}', name: 'app_contact_me_delete', requirements: ['id' => '\d+'], methods: ['POST'])]
