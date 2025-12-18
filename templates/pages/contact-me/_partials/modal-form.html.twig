@@ -12,9 +12,7 @@
                 </div>
                 
                 {{ form_start(form, {
-                    'attr': {
-                        'data-turbo-frame': 'contact-table'
-                    }
+                    'action': contact.id ? path('app_contact_me_edit', {id: contact.id}) : path('app_contact_me_new')
                 }) }}
                 
                 <div class="modal-body">
