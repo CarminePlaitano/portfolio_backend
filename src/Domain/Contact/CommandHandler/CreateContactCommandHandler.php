@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Domain\Contact\Command;
+namespace App\Domain\Contact\CommandHandler;
 
+use App\Domain\Contact\Command\CreateContactCommand;
 use App\Entity\Contact;
 use Doctrine\ORM\EntityManagerInterface;
 
