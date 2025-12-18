@@ -1,11 +1,12 @@
 <?php
 
-namespace App\Domain\Contact\Command;
+namespace App\Domain\Contact\CommandHandler;
 
+use App\Domain\Contact\Command\UpdateContactCommand;
 use App\Repository\ContactRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
-class DeleteContactCommandHandler
+class UpdateContactCommandHandler
 {
     private EntityManagerInterface $entityManager;
     private ContactRepository $contactRepository;
@@ -16,15 +17,18 @@ class DeleteContactCommandHandler
         $this->contactRepository = $contactRepository;
     }
 
-    public function __invoke(DeleteContactCommand $command): void
+    public function __invoke(UpdateContactCommand $command): void
     {
         $contact = $this->contactRepository->find($command->getId());
 
         if (!$contact) {
-            throw new \Exception('Contact with id ' . $command->getId() . ' not found');
+            throw new \Exception('Contact with id '.$command->getId().' not found');
         }
 
-        $this->entityManager->remove($contact);
+        $contact->setType($command->getType());
+        $contact->setValue($command->getValue());
+        $contact->setLabel($command->getLabel());
+
         $this->entityManager->flush();
     }
 }
